@@ -1,0 +1,11 @@
+collected 1 item
+
+tests/test_example.py 
+
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! KeyboardInterrupt !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+*/selectors.py:*: KeyboardInterrupt
+(to show a full traceback on KeyboardInterrupt use --fulltrace)
+========================= no tests ran in * seconds =========================
+main.py:24: in my_tests
+    raise Exception(repr(code))
+E   Exception: <ExitCode.INTERRUPTED: 2>
