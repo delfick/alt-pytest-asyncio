@@ -21,7 +21,7 @@ generator fixtures.
 Changelog
 ---------
 
-0.5 - TBD
+0.5 - 16 August 2019
    * I made this functionality in a work project where I needed to run
      pytest.main from an existing event loop. I decided to make this it's
      own module so I can have tests for this code.
