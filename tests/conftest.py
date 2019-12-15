@@ -5,9 +5,11 @@ import socket
 
 pytest_plugins = ["pytester"]
 
-@pytest.fixture(scope='session', autouse=True)
+
+@pytest.fixture(scope="session", autouse=True)
 def change_pytester(pytestconfig):
     pytestconfig.option.runpytest = "subprocess"
+
 
 @pytest.hookspec(firstresult=True)
 def pytest_ignore_collect(path):
@@ -16,13 +18,15 @@ def pytest_ignore_collect(path):
     if path.basename == "interrupt_test":
         return True
 
+
 def free_port():
     """
     Return an unused port number
     """
     with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
-        s.bind(('0.0.0.0', 0))
+        s.bind(("0.0.0.0", 0))
         return s.getsockname()[1]
+
 
 def port_connected(port):
     """
@@ -37,18 +41,21 @@ def port_connected(port):
     except Exception:
         return False
 
-@pytest.fixture(scope='session')
+
+@pytest.fixture(scope="session")
 def tcp_port():
     return free_port()
 
-@pytest.fixture(scope='session', autouse=True)
+
+@pytest.fixture(scope="session", autouse=True)
 async def a_sync_generator_fixture(tcp_port, reversing_echo_tcp_server):
     try:
         yield
     finally:
         assert port_connected(tcp_port)
 
-@pytest.fixture(scope='session', autouse=True)
+
+@pytest.fixture(scope="session", autouse=True)
 async def reversing_echo_tcp_server(tcp_port):
     async def start_connection(reader, writer):
         while True:
@@ -73,6 +80,7 @@ async def reversing_echo_tcp_server(tcp_port):
     finally:
         server.close()
         await server.wait_closed()
+
 
 @pytest.fixture()
 async def tcp_client(tcp_port):

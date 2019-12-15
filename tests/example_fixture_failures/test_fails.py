@@ -3,19 +3,24 @@
 import asyncio
 import pytest
 
+
 async def one():
     return await two()
 
+
 async def two():
     raise ValueError("WAT")
+
 
 @pytest.fixture()
 async def fixture_returns():
     await one()
 
+
 @pytest.fixture()
 async def fixture_yields():
     yield await one()
+
 
 @pytest.fixture()
 async def fixture_fails_in_finally():
@@ -23,6 +28,7 @@ async def fixture_fails_in_finally():
         yield 1
     finally:
         await one()
+
 
 it "fails on fixture returns", fixture_returns:
     pass

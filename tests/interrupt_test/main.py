@@ -4,6 +4,7 @@ import asyncio
 import pytest
 import sys
 
+
 async def my_tests():
     fut = loop.create_future()
 
@@ -22,6 +23,7 @@ async def my_tests():
 
     if code != 0:
         raise Exception(repr(code))
+
 
 if __name__ == "__main__":
     loop = asyncio.get_event_loop()

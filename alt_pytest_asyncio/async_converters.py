@@ -13,6 +13,7 @@ import asyncio
 import inspect
 import sys
 
+
 def convert_fixtures(fixturedef, request, node):
     """Used to replace async fixtures"""
     if not hasattr(fixturedef, "func"):
@@ -24,6 +25,7 @@ def convert_fixtures(fixturedef, request, node):
     elif inspect.isasyncgenfunction(fixturedef.func):
         convert_async_gen_fixture(fixturedef, request, node)
 
+
 def converted_async_test(test_tasks, func, timeout, *args, **kwargs):
     """Used to replace async tests"""
     __tracebackhide__ = True
@@ -34,7 +36,10 @@ def converted_async_test(test_tasks, func, timeout, *args, **kwargs):
     def look_at_task(t):
         test_tasks.append(t)
 
-    return _run_and_raise(loop, info, func, async_runner(func, timeout, info, args, kwargs), look_at_task)
+    return _run_and_raise(
+        loop, info, func, async_runner(func, timeout, info, args, kwargs), look_at_task
+    )
+
 
 def _find_async_timeout(func, node):
     timeout = 5
@@ -49,6 +54,7 @@ def _find_async_timeout(func, node):
                 timeout = m.args[0]
 
     return timeout
+
 
 def _raise_maybe(func, info):
     __tracebackhide__ = True
@@ -72,6 +78,7 @@ def _raise_maybe(func, info):
         # this entire function in the output
         raise_error()
 
+
 def _run_and_raise(loop, info, func, coro, look_at_task=None):
     __tracebackhide__ = True
 
@@ -90,6 +97,7 @@ def _run_and_raise(loop, info, func, coro, look_at_task=None):
     _raise_maybe(func, info)
 
     return res
+
 
 def _wrap(fixturedef, extras, override, func):
     """
@@ -116,7 +124,7 @@ def _wrap(fixturedef, extras, override, func):
 
     for extra in extras:
         if extra not in fixturedef.argnames:
-            fixturedef.argnames += (extra, )
+            fixturedef.argnames += (extra,)
             strip[extra] = True
 
     @wraps(func)
@@ -130,9 +138,11 @@ def _wrap(fixturedef, extras, override, func):
                 del kwargs[extra]
 
         return override(got, *args, **kwargs)
+
     wrapper.__original__ = func
 
     return wrapper
+
 
 def convert_async_coroutine_fixture(fixturedef, request, node):
     """
@@ -151,6 +161,7 @@ def convert_async_coroutine_fixture(fixturedef, request, node):
 
     fixturedef.func = _wrap(fixturedef, ["event_loop"], override, func)
 
+
 def convert_async_gen_fixture(fixturedef, request, node):
     """
     Return the yield'd value from the generator and ensure the generator is
@@ -161,8 +172,8 @@ def convert_async_gen_fixture(fixturedef, request, node):
     def override(extra, *args, **kwargs):
         __tracebackhide__ = True
 
-        request = extra['request']
-        loop = extra['event_loop']
+        request = extra["request"]
+        loop = extra["event_loop"]
 
         timeout = _find_async_timeout(fixturedef.func, node)
         gen_obj = generator(*args, **kwargs)
@@ -188,9 +199,12 @@ def convert_async_gen_fixture(fixturedef, request, node):
         request.addfinalizer(finalizer)
 
         info = {}
-        return _run_and_raise(loop, info, generator, async_runner(gen_obj.__anext__, timeout, info, (), {}))
+        return _run_and_raise(
+            loop, info, generator, async_runner(gen_obj.__anext__, timeout, info, (), {}),
+        )
 
     fixturedef.func = _wrap(fixturedef, ["request", "event_loop"], override, generator)
+
 
 async def async_runner(func, timeout, info, args, kwargs):
     """

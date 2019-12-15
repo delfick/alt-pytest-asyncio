@@ -5,6 +5,7 @@ import pytest
 
 pytestmark = pytest.mark.async_timeout(0.01)
 
+
 @pytest.fixture()
 async def fixture_timeout_in_finally():
     try:
@@ -12,20 +13,24 @@ async def fixture_timeout_in_finally():
     finally:
         await asyncio.sleep(1)
 
+
 @pytest.fixture()
 async def fixture_timeout_in_setup():
     await asyncio.sleep(1)
     yield 1
+
 
 @pytest.fixture()
 async def fixture_timeout():
     await asyncio.sleep(1)
     return 1
 
+
 @pytest.fixture(scope="module")
 async def fixture_timeout_in_setup_module():
     await asyncio.sleep(1)
     yield 1
+
 
 @pytest.fixture(scope="module", autouse=True)
 async def fixture_timeout_in_teardown_module():
@@ -34,10 +39,12 @@ async def fixture_timeout_in_teardown_module():
     finally:
         await asyncio.sleep(1)
 
+
 @pytest.fixture(scope="module")
 async def fixture_timeout_module():
     await asyncio.sleep(1)
     return 1
+
 
 it "one", fixture_timeout_in_finally:
     pass

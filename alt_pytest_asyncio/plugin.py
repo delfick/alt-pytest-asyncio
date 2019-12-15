@@ -7,6 +7,7 @@ import asyncio
 import pytest
 import sys
 
+
 class AltPytestAsyncioPlugin:
     def __init__(self, loop=None):
         self.own_loop = False
@@ -25,7 +26,9 @@ class AltPytestAsyncioPlugin:
 
     def pytest_configure(self, config):
         """Register our timeout marker which is used to signify async timeouts"""
-        config.addinivalue_line("markers", "async_timeout(length): mark async test to have a timeout")
+        config.addinivalue_line(
+            "markers", "async_timeout(length): mark async test to have a timeout"
+        )
 
     def pytest_sessionfinish(self, session, exitstatus):
         """
@@ -40,7 +43,9 @@ class AltPytestAsyncioPlugin:
             ts.append(task)
             task.cancel()
 
-        self.loop.run_until_complete(asyncio.tasks.gather(*ts, loop=self.loop, return_exceptions=True))
+        self.loop.run_until_complete(
+            asyncio.tasks.gather(*ts, loop=self.loop, return_exceptions=True)
+        )
 
         if self.own_loop:
             try:
@@ -69,6 +74,7 @@ class AltPytestAsyncioPlugin:
             pyfuncitem.obj = wraps(o)(partial(converted_async_test, self.test_tasks, o, timeout))
         yield
 
+
 def cancel_all_tasks(loop, ignore_errors_from_tasks=None):
     if hasattr(asyncio.tasks, "all_tasks"):
         to_cancel = asyncio.tasks.all_tasks(loop)
@@ -93,11 +99,13 @@ def cancel_all_tasks(loop, ignore_errors_from_tasks=None):
                 continue
 
             loop.call_exception_handler(
-                  { 'message': 'unhandled exception during shutdown'
-                  , 'exception': task.exception()
-                  , 'task': task
-                  }
-                )
+                {
+                    "message": "unhandled exception during shutdown",
+                    "exception": task.exception(),
+                    "task": task,
+                }
+            )
+
 
 def run_coro_as_main(loop, coro):
     class Captured(Exception):
@@ -105,6 +113,7 @@ def run_coro_as_main(loop, coro):
             self.error = error
 
     try:
+
         async def runner():
             __tracebackhide__ = True
 

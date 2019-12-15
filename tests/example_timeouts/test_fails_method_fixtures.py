@@ -4,6 +4,7 @@ import asyncio
 import pytest
 
 describe "a class":
+
     @pytest.fixture()
     @pytest.mark.async_timeout(0.01)
     async def fixture_timeout(self):

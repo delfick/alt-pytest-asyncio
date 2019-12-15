@@ -16,6 +16,7 @@ import os
 
 this_dir = os.path.dirname(__file__)
 
+
 @contextmanager
 def listening():
     filename = None
@@ -35,6 +36,7 @@ def listening():
         if os.path.exists(fle.name):
             os.remove(fle.name)
 
+
 def example_dir_factory(tmpdir_factory, name):
     path = os.path.join(this_dir, name)
     assert os.path.isdir(path)
@@ -42,7 +44,7 @@ def example_dir_factory(tmpdir_factory, name):
     expected_file = os.path.join(this_dir, name, "expected")
     assert os.path.isfile(expected_file)
 
-    with open(expected_file, 'r') as fle:
+    with open(expected_file, "r") as fle:
         expected = fle.read().strip()
 
     directory = tmpdir_factory.mktemp(name)
@@ -62,7 +64,10 @@ def example_dir_factory(tmpdir_factory, name):
 
     return Factory()
 
-@pytest.mark.parametrize("name", [name for name in os.listdir(this_dir) if name.startswith("example_")])
+
+@pytest.mark.parametrize(
+    "name", [name for name in os.listdir(this_dir) if name.startswith("example_")]
+)
 async it "shows correctly for failing fixtures", name, request, tmpdir_factory:
     factory = example_dir_factory(tmpdir_factory, name)
     testdir = TD(request, factory)
@@ -84,6 +89,7 @@ async it "shows correctly for failing fixtures", name, request, tmpdir_factory:
     matcher = LineMatcher(lines)
     matcher.fnmatch_lines(expected.split("\n"))
 
+
 @pytest.mark.async_timeout(4)
 async it "cleans up tests properly on interrupt":
     directory = os.path.join(this_dir, "interrupt_test")
@@ -91,17 +97,19 @@ async it "cleans up tests properly on interrupt":
 
     assert os.path.isfile(expected_file)
 
-    with open(expected_file, 'r') as fle:
+    with open(expected_file, "r") as fle:
         expected = fle.read().strip()
 
     with listening() as (s, name):
         p = await asyncio.create_subprocess_exec(
-              sys.executable
-            , "main.py", "--test-socket", name
-            , cwd = directory
-            , stdout = subprocess.PIPE
-            , stderr = subprocess.STDOUT
-            )
+            sys.executable,
+            "main.py",
+            "--test-socket",
+            name,
+            cwd=directory,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.STDOUT,
+        )
 
         try:
             s.accept()
@@ -113,7 +121,7 @@ async it "cleans up tests properly on interrupt":
         p.send_signal(signal.SIGINT)
         await p.wait()
 
-    got = (await p.stdout.read()).decode().strip().split('\n')
+    got = (await p.stdout.read()).decode().strip().split("\n")
     while got and not got[0].startswith("collected"):
         got.pop(0)
 
