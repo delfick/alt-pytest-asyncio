@@ -30,6 +30,14 @@ class AltPytestAsyncioPlugin:
             "markers", "async_timeout(length): mark async test to have a timeout"
         )
 
+    def pytest_addoption(self, parser):
+        """Add an option for default async timeouts"""
+        parser.addini(
+            "default_alt_async_timeout",
+            "The default timeout for the mark.async_timeout",
+            default=5,
+        )
+
     def pytest_sessionfinish(self, session, exitstatus):
         """
         Make sure all the test coroutines have been finalized once pytest has finished
@@ -68,7 +76,7 @@ class AltPytestAsyncioPlugin:
             if timeout:
                 timeout = timeout.args[0]
             else:
-                timeout = 60
+                timeout = float(pyfuncitem.config.getini("default_alt_async_timeout"))
 
             o = pyfuncitem.obj
             pyfuncitem.obj = wraps(o)(partial(converted_async_test, self.test_tasks, o, timeout))

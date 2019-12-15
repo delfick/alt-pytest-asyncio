@@ -21,10 +21,16 @@ generator fixtures.
 Changelog
 ---------
 
+0.5.1 - TBD
+    * Added an ini option ``default_alt_async_timeout`` for the default async
+      timeout for fixtures and tests. The default is now 5 seconds. So say
+      you wanted the default to be 3.5 seconds, you would set
+      ``default_alt_async_timeout`` to be 3.5
+
 0.5 - 16 August 2019
-   * I made this functionality in a work project where I needed to run
-     pytest.main from an existing event loop. I decided to make this it's
-     own module so I can have tests for this code.
+    * I made this functionality in a work project where I needed to run
+      pytest.main from an existing event loop. I decided to make this it's
+      own module so I can have tests for this code.
 
 Running from your own event loop
 --------------------------------
@@ -118,5 +124,5 @@ Note that for generator fixtures, the timeout is applied in whole to both the
 setup and finalization of the fixture. As in the real timeout for the entire
 fixture is essentially double the single timeout specified.
 
-The default timeout value is 5 seconds any the closest async_timeout mark will
-be used. i.e. on the class your test is defined on, or the module, or the session.
+The default timeout is 5 seconds. You can change this default by setting the
+``default_alt_async_timeout`` option to the number of seconds you want.

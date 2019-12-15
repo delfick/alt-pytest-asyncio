@@ -42,7 +42,7 @@ def converted_async_test(test_tasks, func, timeout, *args, **kwargs):
 
 
 def _find_async_timeout(func, node):
-    timeout = 5
+    timeout = float(node.config.getini("default_alt_async_timeout"))
 
     marker = node.get_closest_marker("async_timeout")
     if marker:
