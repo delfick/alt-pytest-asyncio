@@ -21,7 +21,7 @@ generator fixtures.
 Changelog
 ---------
 
-0.5.1 - TBD
+0.5.1 - 15 December 2019
     * Added an ini option ``default_alt_async_timeout`` for the default async
       timeout for fixtures and tests. The default is now 5 seconds. So say
       you wanted the default to be 3.5 seconds, you would set

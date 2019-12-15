@@ -1,5 +1,5 @@
 """pytest-cov: avoid already-imported warning: PYTEST_DONT_REWRITE."""
-VERSION = "0.5"
+VERSION = "0.5.1"
 
 
 def pytest_configure(config):
