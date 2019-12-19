@@ -9,7 +9,7 @@ async def _coro():
 
 @pytest.mark.no_default_loop
 def test_with_custom_loop():
-    loop = asyncio.get_event_loop()
+    loop = asyncio.new_event_loop()
     res = loop.run_until_complete(_coro())
     assert res == "works"
     loop.close()
