@@ -70,6 +70,8 @@ class AltPytestAsyncioPlugin:
     @pytest.hookimpl(tryfirst=True, hookwrapper=True)
     def pytest_pyfunc_call(self, pyfuncitem):
         """Convert async tests to sync tests"""
+        no_default_loop = pyfuncitem.get_closest_marker("no_default_loop")
+
         if inspect.iscoroutinefunction(pyfuncitem.obj):
             timeout = pyfuncitem.get_closest_marker("async_timeout")
 
@@ -80,7 +82,17 @@ class AltPytestAsyncioPlugin:
 
             o = pyfuncitem.obj
             pyfuncitem.obj = wraps(o)(partial(converted_async_test, self.test_tasks, o, timeout))
+
+        if no_default_loop:
+            _loop = self.loop
+            self.loop = None
+            asyncio.set_event_loop(None)
+
         yield
+
+        if no_default_loop:
+            self.loop = _loop
+            asyncio.set_event_loop(_loop)
 
 
 def cancel_all_tasks(loop, ignore_errors_from_tasks=None):
