@@ -19,11 +19,6 @@ class AltPytestAsyncioPlugin:
             asyncio.set_event_loop(loop)
         self.loop = loop
 
-    @pytest.fixture(scope="session")
-    def event_loop(self):
-        """The loop to run our fixtures and tests in"""
-        return self.loop
-
     def pytest_configure(self, config):
         """Register our timeout marker which is used to signify async timeouts"""
         config.addinivalue_line(
@@ -146,3 +141,49 @@ def run_coro_as_main(loop, coro):
     finally:
         cancel_all_tasks(loop, ignore_errors_from_tasks=[task])
         loop.close()
+
+
+class OverrideLoop:
+    def __init__(self, new_loop=True):
+        self.tasks = []
+        self.new_loop = new_loop
+
+    def __enter__(self):
+        self._original_loop = asyncio.get_event_loop()
+
+        if self.new_loop:
+            self.loop = asyncio.new_event_loop()
+        else:
+            self.loop = None
+
+        asyncio.set_event_loop(self.loop)
+        return self
+
+    def __exit__(self, exc_typ, exc, tb):
+        try:
+            if getattr(self, "loop", None):
+                cancel_all_tasks(self.loop, ignore_errors_from_tasks=self.tasks)
+                self.loop.close()
+        finally:
+            if hasattr(self, "_original_loop"):
+                asyncio.set_event_loop(self._original_loop)
+
+    def run_until_complete(self, coro):
+        if not hasattr(self, "loop"):
+            raise Exception(
+                "Cannot use run_until_complete on OverrideLoop outside of using it as a context manager"
+            )
+
+        if self.loop is None:
+            raise Exception(
+                "OverrideLoop is not managing your overridden loop, use run_until_complete on that loop instead"
+            )
+
+        task = self.loop.create_task(coro)
+
+        # Add the task so that when we cancel all tasks before closing the loop
+        # We don't complain about errors in this particular task
+        # As we get the errors risen to the caller via run_until_complete
+        self.tasks.append(task)
+
+        return self.loop.run_until_complete(task)

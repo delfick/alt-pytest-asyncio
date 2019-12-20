@@ -110,15 +110,15 @@ def _wrap(fixturedef, extras, override, func):
         def my_fixture(one):
             pass
 
-        wrapped = _wrap(fixturedef, ["event_loop"], override, my_fixture)
+        wrapped = _wrap(fixturedef, ["request"], override, my_fixture)
 
     can be thought of as replacing my_fixture with::
 
         def override(extra, *args, **kwargs):
             original_my_fixture(*args, **kwargs)
 
-        def my_fixture(one, event_loop):
-            override({"event_loop": ...}, one=one)
+        def my_fixture(one, request):
+            override({"request": ...}, one=one)
     """
     strip = {}
 
@@ -156,10 +156,10 @@ def convert_async_coroutine_fixture(fixturedef, request, node):
         __tracebackhide__ = True
 
         info = {}
-        loop = extra["event_loop"]
+        loop = asyncio.get_event_loop()
         return _run_and_raise(loop, info, func, async_runner(func, timeout, info, args, kwargs))
 
-    fixturedef.func = _wrap(fixturedef, ["event_loop"], override, func)
+    fixturedef.func = _wrap(fixturedef, [], override, func)
 
 
 def convert_async_gen_fixture(fixturedef, request, node):
@@ -173,7 +173,7 @@ def convert_async_gen_fixture(fixturedef, request, node):
         __tracebackhide__ = True
 
         request = extra["request"]
-        loop = extra["event_loop"]
+        loop = asyncio.get_event_loop()
 
         timeout = _find_async_timeout(fixturedef.func, node)
         gen_obj = generator(*args, **kwargs)
@@ -203,7 +203,7 @@ def convert_async_gen_fixture(fixturedef, request, node):
             loop, info, generator, async_runner(gen_obj.__anext__, timeout, info, (), {}),
         )
 
-    fixturedef.func = _wrap(fixturedef, ["request", "event_loop"], override, generator)
+    fixturedef.func = _wrap(fixturedef, ["request"], override, generator)
 
 
 async def async_runner(func, timeout, info, args, kwargs):
