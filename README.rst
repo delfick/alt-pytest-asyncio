@@ -126,3 +126,44 @@ fixture is essentially double the single timeout specified.
 
 The default timeout is 5 seconds. You can change this default by setting the
 ``default_alt_async_timeout`` option to the number of seconds you want.
+
+Overriding the loop
+-------------------
+
+Sometimes it may be necessary to close the current loop in a test. For this to
+not then break the rest of your tests, you will need to set a new event loop for
+your test and then restore the old loop afterwards.
+
+For this, we have a context manager that will install a new asyncio loop and
+then restore the original loop on exit.
+
+Usage looks like::
+
+    from alt_pytest_asyncio.plugin import OverrideLoop
+
+    class TestThing:
+        @pytest.fixture(autouse=True)
+        def custom_loop(self):
+            with OverrideLoop() as custom_loop:
+                yield custom_loop
+
+        def test_thing(self, custom_loop):
+            custom_loop.run_until_complete(my_thing())
+
+By putting the loop into an autouse fixture, all fixtures used by the test
+will have the custom loop. If you want to include module level fixtures too
+then use the OverrideLoop in a module level fixture too.
+
+OverrideLoop takes in a ``new_loop`` boolean that will make it so no new
+loop is set and asyncio is left with no default loop.
+
+The new loop itself (or None if new_loop is False) can be found in the
+``loop`` attribute of the object yielded by the context manager.
+
+The ``run_until_complete`` on the ``custom_loop`` in the above example will
+do a ``run_until_complete`` on the new loop, but in a way that means you
+won't get ``unhandled exception during shutdown`` errors when the context
+manager closes the new loop.
+
+When the context manager exits and closes the new loop, it will first cancel
+all tasks to ensure finally blocks are run.
