@@ -105,4 +105,4 @@ ______________________ test_takes_pytestmark_on_function2 ______________________
     assert False, f"Took too long to complete: {fle}:{lineno}"
 E   AssertionError: Took too long to complete: */example_timeouts*/test_fails_tests.py:17
 E   assert False
-================= 2 failed, 5 passed, 19 error in * seconds =================
+===* 2 failed, 5 passed, 19 error* in * ===*

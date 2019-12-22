@@ -23,4 +23,4 @@ test_fails.py:8: in one
 test_fails.py:12: in two
     raise ValueError*("WAT")
 E   ValueError: WAT
-====================== 1 passed, 3 error in * seconds =======================
+===* 1 passed, 3 error* in * ===*

@@ -4,8 +4,8 @@ tests/test_example.py
 
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!! KeyboardInterrupt !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 */selectors.py:*: KeyboardInterrupt
-(to show a full traceback on KeyboardInterrupt use --fulltrace)
-========================= no tests ran in * seconds =========================
+(to show a full traceback on KeyboardInterrupt use --full*trace)
+===* no tests ran in * ===*
 main.py:25: in my_tests
     raise Exception(repr(code))
 E   Exception: <ExitCode.INTERRUPTED: 2>
