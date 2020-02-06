@@ -21,7 +21,7 @@ generator fixtures.
 Changelog
 ---------
 
-0.5.2 - TBD
+0.5.2 - 6 February 2020
     * Added ability to make a different event loop for some tests
 
 0.5.1 - 15 December 2019
