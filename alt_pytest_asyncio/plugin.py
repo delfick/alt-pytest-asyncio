@@ -2,6 +2,7 @@ from alt_pytest_asyncio.async_converters import convert_fixtures, converted_asyn
 
 from _pytest._code.code import ExceptionInfo
 from functools import partial, wraps
+from collections import defaultdict
 import inspect
 import asyncio
 import pytest
@@ -11,7 +12,7 @@ import sys
 class AltPytestAsyncioPlugin:
     def __init__(self, loop=None):
         self.own_loop = False
-        self.test_tasks = []
+        self.test_tasks = defaultdict(list)
 
         if loop is None:
             self.own_loop = True
@@ -41,14 +42,17 @@ class AltPytestAsyncioPlugin:
 
         This is so if pytest is interrupted, we still execute the finally blocks of all the tests
         """
-        ts = []
-        for task in self.test_tasks:
-            ts.append(task)
-            task.cancel()
+        for loop, tasks in self.test_tasks.items():
+            ts = []
+            for t in tasks:
+                if not t.done():
+                    t.cancel()
+                    ts.append(t)
 
-        self.loop.run_until_complete(
-            asyncio.tasks.gather(*ts, loop=self.loop, return_exceptions=True)
-        )
+            if ts:
+                self.loop.run_until_complete(
+                    asyncio.tasks.gather(*ts, loop=loop, return_exceptions=True)
+                )
 
         if self.own_loop:
             try:

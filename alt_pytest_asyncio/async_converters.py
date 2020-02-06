@@ -34,7 +34,7 @@ def converted_async_test(test_tasks, func, timeout, *args, **kwargs):
     loop = asyncio.get_event_loop()
 
     def look_at_task(t):
-        test_tasks.append(t)
+        test_tasks[loop].append(t)
 
     return _run_and_raise(
         loop, info, func, async_runner(func, timeout, info, args, kwargs), look_at_task
