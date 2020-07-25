@@ -21,7 +21,7 @@ generator fixtures.
 Changelog
 ---------
 
-0.5.3 - TBD
+0.5.3 - 25 July 2020
     * Make sure a KeyboardInterrupt on running tests still shows errors from
       failed tests
 
