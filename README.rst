@@ -21,6 +21,10 @@ generator fixtures.
 Changelog
 ---------
 
+0.5.3 - TBD
+    * Make sure a KeyboardInterrupt on running tests still shows errors from
+      failed tests
+
 0.5.2 - 6 February 2020
     * Added ability to make a different event loop for some tests
 

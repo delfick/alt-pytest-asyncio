@@ -34,6 +34,7 @@ class AltPytestAsyncioPlugin:
             default=5,
         )
 
+    @pytest.hookimpl(tryfirst=True, hookwrapper=True)
     def pytest_sessionfinish(self, session, exitstatus):
         """
         Make sure all the test coroutines have been finalized once pytest has finished
@@ -42,23 +43,25 @@ class AltPytestAsyncioPlugin:
 
         This is so if pytest is interrupted, we still execute the finally blocks of all the tests
         """
-        for loop, tasks in self.test_tasks.items():
-            ts = []
-            for t in tasks:
-                if not t.done():
-                    t.cancel()
-                    ts.append(t)
+        try:
+            for loop, tasks in self.test_tasks.items():
+                ts = []
+                for t in tasks:
+                    if not t.done():
+                        t.cancel()
+                        ts.append(t)
 
-            if ts:
-                self.loop.run_until_complete(
-                    asyncio.tasks.gather(*ts, loop=loop, return_exceptions=True)
-                )
-
-        if self.own_loop:
-            try:
-                cancel_all_tasks(self.loop)
-            finally:
-                self.loop.close()
+                if ts:
+                    self.loop.run_until_complete(
+                        asyncio.tasks.gather(*ts, loop=loop, return_exceptions=True)
+                    )
+            yield
+        finally:
+            if self.own_loop:
+                try:
+                    cancel_all_tasks(self.loop)
+                finally:
+                    self.loop.close()
 
     @pytest.hookimpl(tryfirst=True, hookwrapper=True)
     def pytest_fixture_setup(self, fixturedef, request):

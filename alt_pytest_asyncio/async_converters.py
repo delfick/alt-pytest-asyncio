@@ -11,6 +11,7 @@ that you don't get asyncio internals in the errors.
 from functools import wraps
 import asyncio
 import inspect
+import pytest
 import sys
 
 

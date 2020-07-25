@@ -1,11 +1,24 @@
-collected 1 item
+collected 5 items
 
-tests/test_example.py 
+tests/test_example.py .FFTEST FINALLY
+THING FINALLY
 
+
+=================================== FAILURES ===================================
+__________________________ test_bb_shows_failed_tests __________________________
+tests/test_example.py:19: in test_bb_shows_failed_tests
+    assert False, "NOOOOO"
+E   AssertionError: NOOOOO
+E   assert False
+_________________________ test_cc_shows_timedout_tests _________________________
+*/async_converters.py* in raise_error
+    assert False, f"Took too long to complete: {fle}:{lineno}"
+E   AssertionError: Took too long to complete: */test_example.py:22
+E   assert False
+=========================== short test summary info ============================
+FAILED tests/test_example.py::test_bb_shows_failed_tests - AssertionError: NO...
+FAILED tests/test_example.py::test_cc_shows_timedout_tests - AssertionError: ...
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!! KeyboardInterrupt !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-*/selectors.py:*: KeyboardInterrupt
-(to show a full traceback on KeyboardInterrupt use --full*trace)
-===* no tests ran in * ===*
-main.py:25: in my_tests
-    raise Exception(repr(code))
-E   Exception: <ExitCode.INTERRUPTED: 2>
+*KeyboardInterrupt
+(to show a full traceback on KeyboardInterrupt use --full-trace)
+========================= 2 failed, 1 passed in * ==========================

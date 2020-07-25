@@ -39,17 +39,17 @@ _______________________ ERROR at teardown of test_seven ________________________
     assert False, f"Took too long to complete: {fle}:{lineno}"
 E   AssertionError: Took too long to complete: */example_timeouts*/test_fails.py:37
 E   assert False
-____________________ ERROR at setup of TestAClass.test_2one ____________________
+____________________ ERROR at setup of TestAClass.test_one _____________________
 */async_converters.py:*: in raise_error
     assert False, f"Took too long to complete: {fle}:{lineno}"
 E   AssertionError: Took too long to complete: */example_timeouts*/test_fails_method_fixtures.py:8
 E   assert False
-____________________ ERROR at setup of TestAClass.test_2two ____________________
+____________________ ERROR at setup of TestAClass.test_two _____________________
 */async_converters.py:*: in raise_error
     assert False, f"Took too long to complete: {fle}:{lineno}"
 E   AssertionError: Took too long to complete: */example_timeouts*/test_fails_method_fixtures.py:14
 E   assert False
-_________________ ERROR at teardown of TestAClass.test_2three __________________
+__________________ ERROR at teardown of TestAClass.test_three __________________
 */async_converters.py:*: in raise_error
     assert False, f"Took too long to complete: {fle}:{lineno}"
 E   AssertionError: Took too long to complete: */example_timeouts*/test_fails_method_fixtures.py:20
@@ -105,4 +105,3 @@ ______________________ test_takes_pytestmark_on_function2 ______________________
     assert False, f"Took too long to complete: {fle}:{lineno}"
 E   AssertionError: Took too long to complete: */example_timeouts*/test_fails_tests.py:17
 E   assert False
-===* 2 failed, 5 passed, 19 error* in * ===*

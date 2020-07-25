@@ -100,26 +100,13 @@ async it "cleans up tests properly on interrupt":
     with open(expected_file, "r") as fle:
         expected = fle.read().strip()
 
-    with listening() as (s, name):
-        p = await asyncio.create_subprocess_exec(
-            sys.executable,
-            "main.py",
-            "--test-socket",
-            name,
-            cwd=directory,
-            stdout=subprocess.PIPE,
-            stderr=subprocess.STDOUT,
-        )
+    p = await asyncio.create_subprocess_exec(
+        shutil.which("pytest"), cwd=directory, stdout=subprocess.PIPE, stderr=subprocess.STDOUT,
+    )
 
-        try:
-            s.accept()
-        except socket.timeout:
-            print((await p.stdout.read()).decode())
-            assert False, "Timed out waiting for the test to say it's ready to be interrupted"
-
-        await asyncio.sleep(0.01)
-        p.send_signal(signal.SIGINT)
-        await p.wait()
+    await asyncio.sleep(2)
+    p.send_signal(signal.SIGINT)
+    await p.wait()
 
     got = (await p.stdout.read()).decode().strip().split("\n")
     while got and not got[0].startswith("collected"):

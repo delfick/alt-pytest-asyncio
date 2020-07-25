@@ -1,6 +1,8 @@
 from setuptools import setup, find_packages
 from alt_pytest_asyncio import VERSION
 
+# fmt: off
+
 setup(
       name = 'alt_pytest_asyncio'
     , version = VERSION
@@ -14,8 +16,8 @@ setup(
 
     , extras_require =
       { 'tests':
-        [ 'pytest==5.0.1'
-        , 'noseOfYeti==1.8.1'
+        [ 'pytest==5.4.3'
+        , 'noseOfYeti==2.0.1'
         , "nest-asyncio==1.0.0"
         ]
       }
@@ -37,3 +39,5 @@ setup(
     , description = 'Alternative pytest plugin to pytest-asyncio'
     , long_description = open("README.rst").read()
     )
+
+# fmt: on
