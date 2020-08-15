@@ -85,8 +85,8 @@ class AltPytestAsyncioPlugin:
             if timeout:
                 timeout = timeout.args[0]
             else:
-                timeout = float(pyfuncitem.config.getoption("async_timeout", None) or
-                                pyfuncitem.config.getini("async_timeout"))
+                timeout = float(pyfuncitem.config.getoption("default_async_timeout", None) or
+                                pyfuncitem.config.getini("default_async_timeout"))
 
             o = pyfuncitem.obj
             pyfuncitem.obj = wraps(o)(partial(converted_async_test, self.test_tasks, o, timeout))
