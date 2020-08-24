@@ -1,5 +1,11 @@
 from setuptools import setup, find_packages
-from alt_pytest_asyncio import VERSION
+
+import runpy
+import os
+
+VERSION = runpy.run_path(
+    os.path.join(os.path.dirname(__file__), "alt_pytest_asyncio", "version.py")
+)["VERSION"]
 
 # fmt: off
 

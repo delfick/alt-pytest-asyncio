@@ -26,19 +26,6 @@ class AltPytestAsyncioPlugin:
             "markers", "async_timeout(length): mark async test to have a timeout"
         )
 
-    def pytest_addoption(self, parser):
-        """Add an option for default async timeouts"""
-        group = parser.getgroup("alt-pytest-asyncio options")
-        group.addoption(
-            "--default-async-timeout",
-            type=float,
-            dest="default_async_timeout",
-            help="timeout in seconds before failing a test",
-        )
-        parser.addini(
-            "default_async_timeout", "The default timeout for the mark.async_timeout", default=5,
-        )
-
     @pytest.hookimpl(tryfirst=True, hookwrapper=True)
     def pytest_sessionfinish(self, session, exitstatus):
         """
