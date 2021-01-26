@@ -21,6 +21,10 @@ generator fixtures.
 Changelog
 ---------
 
+0.5.4 - TBD
+    * Added a ``--default-async-timeout`` option from the CLI. With many thanks
+      to @andredias.
+
 0.5.3 - 25 July 2020
     * Make sure a KeyboardInterrupt on running tests still shows errors from
       failed tests
@@ -133,6 +137,9 @@ fixture is essentially double the single timeout specified.
 
 The default timeout is 5 seconds. You can change this default by setting the
 ``default_alt_async_timeout`` option to the number of seconds you want.
+
+This setting is also available from the CLI using the ``--default-async-timeout``
+option.
 
 Overriding the loop
 -------------------
