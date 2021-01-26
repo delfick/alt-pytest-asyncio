@@ -23,7 +23,7 @@ setup(
     , extras_require =
       { 'tests':
         [ 'pytest==5.4.3'
-        , 'noseOfYeti==2.0.1'
+        , 'noseOfYeti==2.0.2'
         , "nest-asyncio==1.0.0"
         ]
       }
