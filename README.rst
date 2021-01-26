@@ -21,7 +21,7 @@ generator fixtures.
 Changelog
 ---------
 
-0.5.4 - TBD
+0.5.4 - 26 January 2021
     * Added a ``--default-async-timeout`` option from the CLI. With many thanks
       to @andredias.
 
