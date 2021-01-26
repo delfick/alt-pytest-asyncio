@@ -24,6 +24,8 @@ Changelog
 0.5.4 - 26 January 2021
     * Added a ``--default-async-timeout`` option from the CLI. With many thanks
       to @andredias.
+    * Renamed existing pytest.ini option from ``default_alt_async_timeout`` to
+      be ``default_async_timeout``.
 
 0.5.3 - 25 July 2020
     * Make sure a KeyboardInterrupt on running tests still shows errors from
@@ -136,7 +138,7 @@ setup and finalization of the fixture. As in the real timeout for the entire
 fixture is essentially double the single timeout specified.
 
 The default timeout is 5 seconds. You can change this default by setting the
-``default_alt_async_timeout`` option to the number of seconds you want.
+``default_async_timeout`` option to the number of seconds you want.
 
 This setting is also available from the CLI using the ``--default-async-timeout``
 option.
