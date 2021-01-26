@@ -25,7 +25,7 @@ jobs:
 
       - id: package
         run: >
-          printf "::set-output name=package::alt_pytest_asyncio-web-${{ steps.version.outputs.version}}.tar.gz"
+          printf "::set-output name=package::alt_pytest_asyncio-${{ steps.version.outputs.version}}.tar.gz"
 
       - id: create_release
         uses: actions/create-release@v1
