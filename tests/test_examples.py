@@ -13,6 +13,15 @@ import os
 
 this_dir = os.path.dirname(__file__)
 
+pytest_uses_paths = False
+try:
+    from _pytest.pytester import Pytester
+
+    pytest_uses_paths = True
+    TD = Pytester  # noqa
+except ImportError:
+    pass
+
 
 @contextmanager
 def listening():
@@ -32,7 +41,7 @@ def listening():
             os.remove(fle.name)
 
 
-def example_dir_factory(tmpdir_factory, name):
+def example_dir_factory(tmp_path_factory, name):
     path = os.path.join(this_dir, name)
     assert os.path.isdir(path)
 
@@ -42,7 +51,7 @@ def example_dir_factory(tmpdir_factory, name):
     with open(expected_file, "r") as fle:
         expected = fle.read().strip()
 
-    directory = tmpdir_factory.mktemp(name)
+    directory = tmp_path_factory.mktemp(name)
     shutil.rmtree(directory)
     shutil.copytree(path, directory)
 
@@ -53,9 +62,19 @@ def example_dir_factory(tmpdir_factory, name):
 
         def mktemp(s, p, **kwargs):
             if p.startswith("tmp-"):
-                return tmpdir_factory.mktemp(p)
+                res = tmp_path_factory.mktemp(p)
             else:
-                return directory
+                res = directory
+
+            try:
+                import py
+            except ImportError:
+                return res
+            else:
+                if pytest_uses_paths:
+                    return res
+
+                return py.path.local(str(res))
 
     return Factory()
 
@@ -63,8 +82,8 @@ def example_dir_factory(tmpdir_factory, name):
 @pytest.mark.parametrize(
     "name", [name for name in os.listdir(this_dir) if name.startswith("example_")]
 )
-async it "shows correctly for failing fixtures", name, request, tmpdir_factory:
-    factory = example_dir_factory(tmpdir_factory, name)
+async it "shows correctly for failing fixtures", name, request, tmp_path_factory:
+    factory = example_dir_factory(tmp_path_factory, name)
     testdir = TD(request, factory)
     expected = factory.expected
     result = testdir.runpytest("--tb", "short")
