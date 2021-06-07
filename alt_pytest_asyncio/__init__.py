@@ -14,7 +14,9 @@ def pytest_addoption(parser):
     )
     group.addoption("--default-async-timeout", type=float, dest="default_async_timeout", help=desc)
     parser.addini(
-        "default_async_timeout", desc, default=5,
+        "default_async_timeout",
+        desc,
+        default=5,
     )
 
 

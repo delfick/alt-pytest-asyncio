@@ -203,7 +203,10 @@ def convert_async_gen_fixture(fixturedef, request, node):
 
         info = {}
         return _run_and_raise(
-            loop, info, generator, async_runner(gen_obj.__anext__, timeout, info, (), {}),
+            loop,
+            info,
+            generator,
+            async_runner(gen_obj.__anext__, timeout, info, (), {}),
         )
 
     fixturedef.func = _wrap(fixturedef, ["request"], override, generator)
