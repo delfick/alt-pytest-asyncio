@@ -4,4 +4,4 @@ set -e
 
 cd $(git rev-parse --show-toplevel)
 
-./tools/pylama alt_pytest_asyncio "$@"
+./tools/pylama alt_pytest_asyncio tests "$@"

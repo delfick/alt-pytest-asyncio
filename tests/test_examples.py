@@ -2,7 +2,6 @@
 
 from _pytest.pytester import Testdir as TD, LineMatcher
 from contextlib import contextmanager
-from textwrap import dedent
 import subprocess
 import tempfile
 import asyncio
@@ -10,8 +9,6 @@ import socket
 import signal
 import pytest
 import shutil
-import sys
-import py
 import os
 
 this_dir = os.path.dirname(__file__)
@@ -19,10 +16,8 @@ this_dir = os.path.dirname(__file__)
 
 @contextmanager
 def listening():
-    filename = None
     try:
         with tempfile.NamedTemporaryFile(delete=False) as fle:
-            filename = fle.name
             fle.close()
             os.remove(fle.name)
 
@@ -101,7 +96,10 @@ async it "cleans up tests properly on interrupt":
         expected = fle.read().strip()
 
     p = await asyncio.create_subprocess_exec(
-        shutil.which("pytest"), cwd=directory, stdout=subprocess.PIPE, stderr=subprocess.STDOUT,
+        shutil.which("pytest"),
+        cwd=directory,
+        stdout=subprocess.PIPE,
+        stderr=subprocess.STDOUT,
     )
 
     await asyncio.sleep(2)

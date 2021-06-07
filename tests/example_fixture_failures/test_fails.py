@@ -1,6 +1,5 @@
 # coding: spec
 
-import asyncio
 import pytest
 
 

@@ -19,9 +19,11 @@ async def things(futs, loop_info, works=False):
         futs["a"].set_result(None)
         futs["b"].set_result(None)
 
-    task = asyncio.get_event_loop().create_task(setter())
+    task = None
 
     try:
+        task = asyncio.get_event_loop().create_task(setter())
+
         if not works:
             loop_info["thingsa"] = asyncio.get_event_loop()
 
@@ -37,6 +39,9 @@ async def things(futs, loop_info, works=False):
     finally:
         if not works:
             loop_info["thingsb"] = asyncio.get_event_loop()
+
+        task.cancel()
+        await asyncio.wait([task])
 
         if works:
             assert found == [None, None]
