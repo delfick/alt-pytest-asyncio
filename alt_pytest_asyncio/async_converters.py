@@ -14,16 +14,75 @@ import inspect
 import sys
 
 
-def convert_fixtures(fixturedef, request, node):
+def convert_fixtures(ctx, fixturedef, request, node):
     """Used to replace async fixtures"""
     if not hasattr(fixturedef, "func"):
         return
 
+    if hasattr(fixturedef.func, "__alt_asyncio_pytest_converted__"):
+        return
+
     if inspect.iscoroutinefunction(fixturedef.func):
         convert_async_coroutine_fixture(fixturedef, request, node)
+        fixturedef.func.__alt_asyncio_pytest_converted__ = True
 
     elif inspect.isasyncgenfunction(fixturedef.func):
         convert_async_gen_fixture(fixturedef, request, node)
+        fixturedef.func.__alt_asyncio_pytest_converted__ = True
+
+    elif inspect.isgeneratorfunction(fixturedef.func):
+        convert_sync_gen_fixture(ctx, fixturedef)
+        fixturedef.func.__alt_asyncio_pytest_converted__ = True
+
+    else:
+        convert_sync_fixture(ctx, fixturedef)
+        fixturedef.func.__alt_asyncio_pytest_converted__ = True
+
+
+def convert_sync_fixture(ctx, fixturedef):
+    """
+    Used to make sure a non-async fixture is run in our
+    asyncio contextvars
+    """
+    original = fixturedef.func
+
+    @wraps(original)
+    def run_fixture(*args, **kwargs):
+        try:
+            ctx.run(lambda: None)
+            run = lambda func, *a, **kw: ctx.run(func, *a, **kw)
+        except RuntimeError:
+            run = lambda func, *a, **kw: func(*a, **kw)
+
+        return run(original, *args, **kwargs)
+
+    fixturedef.func = run_fixture
+
+
+def convert_sync_gen_fixture(ctx, fixturedef):
+    """
+    Used to make sure a non-async generator fixture is run in our
+    asyncio contextvars
+    """
+    original = fixturedef.func
+
+    @wraps(original)
+    def run_fixture(*args, **kwargs):
+        try:
+            ctx.run(lambda: None)
+            run = lambda func, *a, **kw: ctx.run(func, *a, **kw)
+        except RuntimeError:
+            run = lambda func, *a, **kw: func(*a, **kw)
+
+        cm = original(*args, **kwargs)
+        value = run(cm.__next__)
+        try:
+            yield value
+            run(cm.__next__)
+        except StopIteration:
+            pass
+
+    fixturedef.func = run_fixture
 
 
 def converted_async_test(test_tasks, func, timeout, *args, **kwargs):

@@ -1,7 +1,11 @@
+from pathlib import Path
 import asyncio
 import pytest
 import struct
 import socket
+import sys
+
+sys.path.append(str(Path(__file__).parent / "code_contextvars"))
 
 pytest_plugins = ["pytester"]
 

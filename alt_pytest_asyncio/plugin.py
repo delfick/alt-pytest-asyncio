@@ -1,8 +1,11 @@
 from alt_pytest_asyncio.async_converters import convert_fixtures, converted_async_test
+from alt_pytest_asyncio import async_converters
 
 from _pytest._code.code import ExceptionInfo
 from functools import partial, wraps
 from collections import defaultdict
+from unittest import mock
+import contextvars
 import inspect
 import asyncio
 import pytest
@@ -18,13 +21,47 @@ class AltPytestAsyncioPlugin:
             self.own_loop = True
             loop = asyncio.new_event_loop()
             asyncio.set_event_loop(loop)
+
         self.loop = loop
+        self.ctx = contextvars.copy_context()
 
     def pytest_configure(self, config):
         """Register our timeout marker which is used to signify async timeouts"""
         config.addinivalue_line(
             "markers", "async_timeout(length): mark async test to have a timeout"
         )
+
+    @pytest.hookimpl(tryfirst=True, hookwrapper=True)
+    def pytest_sessionstart(self, session):
+        """
+        Python won't let me create the task with it's own context And
+        run_until_complete doesn't let me propagate a context.
+
+        So I monkey patch call_soon to force the context So I don't need my own
+        Task class
+
+        This obviously won't work if Task doesn't something other than
+        ``call_soon(self._step)``.
+        """
+        original = self.loop.call_soon
+
+        @wraps(original)
+        def wrapped_call_soon(callback, *args, context=None):
+            is_alt_pytest = False
+            for frm in inspect.stack():
+                mod = inspect.getmodule(frm[0])
+                if mod is async_converters:
+                    is_alt_pytest = True
+                    break
+
+            if is_alt_pytest:
+                return original(callback, *args, context=self.ctx)
+            else:
+                return original(callback, *args, context=context)
+
+        self.loop_patch = mock.patch.object(self.loop, "call_soon", wrapped_call_soon)
+        self.loop_patch.start()
+        yield
 
     @pytest.hookimpl(tryfirst=True, hookwrapper=True)
     def pytest_sessionfinish(self, session, exitstatus):
@@ -53,10 +90,13 @@ class AltPytestAsyncioPlugin:
                 finally:
                     self.loop.close()
 
+            if hasattr(self, "loop_patch"):
+                self.loop_patch.stop()
+
     @pytest.hookimpl(tryfirst=True, hookwrapper=True)
     def pytest_fixture_setup(self, fixturedef, request):
         """Convert async fixtures to sync fixtures"""
-        convert_fixtures(fixturedef, request, request.node)
+        convert_fixtures(self.ctx, fixturedef, request, request.node)
         yield
 
     @pytest.hookimpl(tryfirst=True, hookwrapper=True)
@@ -75,6 +115,22 @@ class AltPytestAsyncioPlugin:
 
             o = pyfuncitem.obj
             pyfuncitem.obj = wraps(o)(partial(converted_async_test, self.test_tasks, o, timeout))
+        else:
+
+            original = pyfuncitem.obj
+
+            @wraps(original)
+            def run_obj(*args, **kwargs):
+                try:
+                    self.ctx.run(lambda: None)
+                    run = lambda func, *a, **kw: self.ctx.run(func, *a, **kw)
+                except RuntimeError:
+                    run = lambda func, *a, **kw: func(*a, **kw)
+
+                run(original, *args, **kwargs)
+
+            pyfuncitem.obj = run_obj
+
         yield
 
 

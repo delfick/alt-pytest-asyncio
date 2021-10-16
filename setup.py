@@ -25,6 +25,7 @@ setup(
         [ 'pytest==6.2.4'
         , 'noseOfYeti==2.0.2'
         , "nest-asyncio==1.0.0"
+        , "pytest-order==1.0.0"
         ]
       }
 
