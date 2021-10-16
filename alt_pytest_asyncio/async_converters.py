@@ -189,6 +189,10 @@ def convert_async_gen_fixture(fixturedef, request, node):
             """Yield again, to finalize."""
             __tracebackhide__ = True
 
+            nonlocal info
+            if "ran_once" not in info:
+                return
+
             info = {"gen_obj": gen_obj, "finalizer": True}
 
             async def async_finalizer():
@@ -242,3 +246,5 @@ async def async_runner(func, timeout, info, args, kwargs):
         exc_info = sys.exc_info()
         e = exc_info[1]
         info["e"] = e
+    finally:
+        info["ran_once"] = True
