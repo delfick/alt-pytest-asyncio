@@ -36,6 +36,8 @@ def converted_async_test(test_tasks, func, timeout, *args, **kwargs):
     def look_at_task(t):
         test_tasks[loop].append(t)
 
+    info["func"] = func
+
     return _run_and_raise(
         loop, info, func, async_runner(func, timeout, info, args, kwargs), look_at_task
     )
@@ -158,7 +160,7 @@ def convert_async_coroutine_fixture(fixturedef, request, node):
     def override(extra, *args, **kwargs):
         __tracebackhide__ = True
 
-        info = {}
+        info = {"func": func}
         loop = asyncio.get_event_loop()
         return _run_and_raise(loop, info, func, async_runner(func, timeout, info, args, kwargs))
 
@@ -181,11 +183,13 @@ def convert_async_gen_fixture(fixturedef, request, node):
         timeout = _find_async_timeout(fixturedef.func, node)
         gen_obj = generator(*args, **kwargs)
 
+        info = {"gen_obj": gen_obj}
+
         def finalizer():
             """Yield again, to finalize."""
             __tracebackhide__ = True
 
-            info = {}
+            info = {"gen_obj": gen_obj, "finalizer": True}
 
             async def async_finalizer():
                 __tracebackhide__ = True
@@ -201,7 +205,6 @@ def convert_async_gen_fixture(fixturedef, request, node):
 
         request.addfinalizer(finalizer)
 
-        info = {}
         return _run_and_raise(
             loop,
             info,
