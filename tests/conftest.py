@@ -1,4 +1,9 @@
+import sys
+from pathlib import Path
+
 import pytest
+
+sys.path.append(str(Path(__file__).parent / "code_contextvars"))
 
 pytest_plugins = ["pytester"]
 

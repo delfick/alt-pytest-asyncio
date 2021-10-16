@@ -14,19 +14,78 @@ import sys
 from functools import wraps
 
 
-def convert_fixtures(fixturedef, request, node):
+def convert_fixtures(ctx, fixturedef, request, node):
     """Used to replace async fixtures"""
     if not hasattr(fixturedef, "func"):
         return
 
+    if hasattr(fixturedef.func, "__alt_asyncio_pytest_converted__"):
+        return
+
     if inspect.iscoroutinefunction(fixturedef.func):
-        convert_async_coroutine_fixture(fixturedef, request, node)
+        convert_async_coroutine_fixture(ctx, fixturedef, request, node)
+        fixturedef.func.__alt_asyncio_pytest_converted__ = True
 
     elif inspect.isasyncgenfunction(fixturedef.func):
-        convert_async_gen_fixture(fixturedef, request, node)
+        convert_async_gen_fixture(ctx, fixturedef, request, node)
+        fixturedef.func.__alt_asyncio_pytest_converted__ = True
+
+    elif inspect.isgeneratorfunction(fixturedef.func):
+        convert_sync_gen_fixture(ctx, fixturedef)
+        fixturedef.func.__alt_asyncio_pytest_converted__ = True
+
+    else:
+        convert_sync_fixture(ctx, fixturedef)
+        fixturedef.func.__alt_asyncio_pytest_converted__ = True
 
 
-def converted_async_test(test_tasks, func, timeout, *args, **kwargs):
+def convert_sync_fixture(ctx, fixturedef):
+    """
+    Used to make sure a non-async fixture is run in our
+    asyncio contextvars
+    """
+    original = fixturedef.func
+
+    @wraps(original)
+    def run_fixture(*args, **kwargs):
+        try:
+            ctx.run(lambda: None)
+            run = lambda func, *a, **kw: ctx.run(func, *a, **kw)
+        except RuntimeError:
+            run = lambda func, *a, **kw: func(*a, **kw)
+
+        return run(original, *args, **kwargs)
+
+    fixturedef.func = run_fixture
+
+
+def convert_sync_gen_fixture(ctx, fixturedef):
+    """
+    Used to make sure a non-async generator fixture is run in our
+    asyncio contextvars
+    """
+    original = fixturedef.func
+
+    @wraps(original)
+    def run_fixture(*args, **kwargs):
+        try:
+            ctx.run(lambda: None)
+            run = lambda func, *a, **kw: ctx.run(func, *a, **kw)
+        except RuntimeError:
+            run = lambda func, *a, **kw: func(*a, **kw)
+
+        cm = original(*args, **kwargs)
+        value = run(cm.__next__)
+        try:
+            yield value
+            run(cm.__next__)
+        except StopIteration:
+            pass
+
+    fixturedef.func = run_fixture
+
+
+def converted_async_test(ctx, test_tasks, func, timeout, *args, **kwargs):
     """Used to replace async tests"""
     __tracebackhide__ = True
 
@@ -39,7 +98,7 @@ def converted_async_test(test_tasks, func, timeout, *args, **kwargs):
     info["func"] = func
 
     return _run_and_raise(
-        loop, info, func, async_runner(func, timeout, info, args, kwargs), look_at_task
+        ctx, loop, info, func, async_runner(func, timeout, info, args, kwargs), look_at_task
     )
 
 
@@ -83,7 +142,7 @@ def _raise_maybe(func, info):
         raise_error()
 
 
-def _run_and_raise(loop, info, func, coro, look_at_task=None):
+def _run_and_raise(ctx, loop, info, func, coro, look_at_task=None):
     __tracebackhide__ = True
 
     def silent_done_task(res):
@@ -91,7 +150,7 @@ def _run_and_raise(loop, info, func, coro, look_at_task=None):
             pass
         res.exception()
 
-    task = loop.create_task(coro)
+    task = loop.create_task(coro, context=ctx)
     task.add_done_callback(silent_done_task)
 
     if look_at_task:
@@ -148,7 +207,7 @@ def _wrap(fixturedef, extras, override, func):
     return wrapper
 
 
-def convert_async_coroutine_fixture(fixturedef, request, node):
+def convert_async_coroutine_fixture(ctx, fixturedef, request, node):
     """
     Run our async fixture in our event loop and capture the error from
     inside the loop.
@@ -161,12 +220,14 @@ def convert_async_coroutine_fixture(fixturedef, request, node):
 
         info = {"func": func}
         loop = asyncio.get_event_loop_policy().get_event_loop()
-        return _run_and_raise(loop, info, func, async_runner(func, timeout, info, args, kwargs))
+        return _run_and_raise(
+            ctx, loop, info, func, async_runner(func, timeout, info, args, kwargs)
+        )
 
     fixturedef.func = _wrap(fixturedef, [], override, func)
 
 
-def convert_async_gen_fixture(fixturedef, request, node):
+def convert_async_gen_fixture(ctx, fixturedef, request, node):
     """
     Return the yield'd value from the generator and ensure the generator is
     finished.
@@ -204,11 +265,12 @@ def convert_async_gen_fixture(fixturedef, request, node):
                 else:
                     info["e"] = ValueError("Async generator fixture should only yield once")
 
-            _run_and_raise(loop, info, generator, async_finalizer())
+            _run_and_raise(ctx, loop, info, generator, async_finalizer())
 
         request.addfinalizer(finalizer)
 
         return _run_and_raise(
+            ctx,
             loop,
             info,
             generator,

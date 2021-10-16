@@ -1,4 +1,5 @@
 import asyncio
+import contextvars
 import inspect
 import sys
 from collections import defaultdict
@@ -19,7 +20,9 @@ class AltPytestAsyncioPlugin:
             self.own_loop = True
             loop = asyncio.new_event_loop()
             asyncio.set_event_loop(loop)
+
         self.loop = loop
+        self.ctx = contextvars.copy_context()
 
     def pytest_configure(self, config):
         """Register our timeout marker which is used to signify async timeouts"""
@@ -57,7 +60,7 @@ class AltPytestAsyncioPlugin:
     @pytest.hookimpl(tryfirst=True, hookwrapper=True)
     def pytest_fixture_setup(self, fixturedef, request):
         """Convert async fixtures to sync fixtures"""
-        convert_fixtures(fixturedef, request, request.node)
+        convert_fixtures(self.ctx, fixturedef, request, request.node)
         yield
 
     @pytest.hookimpl(tryfirst=True, hookwrapper=True)
@@ -75,7 +78,25 @@ class AltPytestAsyncioPlugin:
                 )
 
             o = pyfuncitem.obj
-            pyfuncitem.obj = wraps(o)(partial(converted_async_test, self.test_tasks, o, timeout))
+            pyfuncitem.obj = wraps(o)(
+                partial(converted_async_test, self.ctx, self.test_tasks, o, timeout)
+            )
+        else:
+
+            original = pyfuncitem.obj
+
+            @wraps(original)
+            def run_obj(*args, **kwargs):
+                try:
+                    self.ctx.run(lambda: None)
+                    run = lambda func, *a, **kw: self.ctx.run(func, *a, **kw)
+                except RuntimeError:
+                    run = lambda func, *a, **kw: func(*a, **kw)
+
+                run(original, *args, **kwargs)
+
+            pyfuncitem.obj = run_obj
+
         yield
 
 
