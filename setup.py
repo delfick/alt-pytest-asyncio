@@ -14,7 +14,7 @@ setup(
     , version = VERSION
     , packages = find_packages(include="alt_pytest_asyncio.*", exclude=["tests*"])
 
-    , python_requires = ">= 3.5"
+    , python_requires = ">= 3.7"
 
     , install_requires =
       [ "pytest >= 3.0.6"
