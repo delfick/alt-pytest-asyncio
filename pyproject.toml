@@ -25,6 +25,7 @@ tests = [
     "nest-asyncio==1.0.0",
     "noseOfYeti[black]==2.4.1",
     "pytest==7.3.0",
+    "pytest-order==1.2.1"
 ]
 
 [project.entry-points.pytest11]

@@ -21,6 +21,9 @@ generator fixtures.
 Changelog
 ---------
 
+0.8.0 - TBD
+    * Provide simple support for tests being aware of asyncio.Context
+
 0.7.2 - 1 October 2023
     * Timeouts don't take affect if the debugger is active
 
