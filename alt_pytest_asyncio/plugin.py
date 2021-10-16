@@ -44,9 +44,7 @@ class AltPytestAsyncioPlugin:
                         ts.append(t)
 
                 if ts:
-                    self.loop.run_until_complete(
-                        asyncio.tasks.gather(*ts, loop=loop, return_exceptions=True)
-                    )
+                    self.loop.run_until_complete(asyncio.tasks.gather(*ts, return_exceptions=True))
             yield
         finally:
             if self.own_loop:
@@ -92,7 +90,7 @@ def cancel_all_tasks(loop, ignore_errors_from_tasks=None):
     for task in to_cancel:
         task.cancel()
 
-    gathered = asyncio.tasks.gather(*to_cancel, loop=loop, return_exceptions=True)
+    gathered = asyncio.tasks.gather(*to_cancel, return_exceptions=True)
     loop.run_until_complete(gathered)
 
     for task in to_cancel:
@@ -187,7 +185,7 @@ class OverrideLoop:
         self.new_loop = new_loop
 
     def __enter__(self):
-        self._original_loop = asyncio.get_event_loop()
+        self._original_loop = asyncio.get_event_loop_policy().get_event_loop()
 
         if self.new_loop:
             self.loop = asyncio.new_event_loop()
