@@ -199,10 +199,45 @@ class OverrideLoop:
         try:
             if getattr(self, "loop", None):
                 cancel_all_tasks(self.loop, ignore_errors_from_tasks=self.tasks)
+                self.loop.run_until_complete(self.shutdown_asyncgens())
                 self.loop.close()
         finally:
             if hasattr(self, "_original_loop"):
                 asyncio.set_event_loop(self._original_loop)
+
+    async def shutdown_asyncgens(self):
+        """
+        A version of loop.shutdown_asyncgens that tries to cancel the generators
+        before closing them.
+        """
+        if not len(self.loop._asyncgens):
+            return
+
+        closing_agens = list(self.loop._asyncgens)
+        self.loop._asyncgens.clear()
+
+        # I would do an asyncio.tasks.gather but it would appear that just causes
+        # the asyncio loop to think it's shutdown, so I have to do them one at a time
+        for ag in closing_agens:
+            try:
+                try:
+                    try:
+                        await ag.athrow(asyncio.CancelledError())
+                    except StopAsyncIteration:
+                        pass
+                finally:
+                    await ag.aclose()
+            except asyncio.CancelledError:
+                pass
+            except:
+                exc = sys.exc_info()[1]
+                self.loop.call_exception_handler(
+                    {
+                        "message": "an error occurred during closing of asynchronous generator",
+                        "exception": exc,
+                        "asyncgen": ag,
+                    }
+                )
 
     def run_until_complete(self, coro):
         if not hasattr(self, "loop"):
