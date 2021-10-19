@@ -137,6 +137,78 @@ describe "no new loop":
         get_event_loop().run_until_complete(info["coro"])
 
 
+it "can shutdown async gens":
+    info1 = []
+    info2 = []
+    info3 = []
+
+    original = asyncio.get_event_loop()
+
+    async def my_generator(info):
+        try:
+            info.append(1)
+            yield
+            info.append(2)
+            yield
+            info.append(3)
+        except asyncio.CancelledError:
+            info.append("cancelled")
+            raise
+        finally:
+            info.append(("done", __import__("sys").exc_info()[0]))
+
+    # Test that the outside loop isn't affected by the inside loop
+    outside_gen = my_generator(info1)
+
+    async def outside1():
+        await outside_gen.__anext__()
+        await outside_gen.__anext__()
+
+    original.run_until_complete(outside1())
+    assert info1 == [1, 2]
+
+    # The way python asyncio works
+    # Means that by defining this outside our OverrideLoop
+    # The weakref held against it in the _asyncgens set on the loop
+    # Will remain so that our shutdown_asyncgens function may work
+    ag = my_generator(info2)
+
+    with OverrideLoop(new_loop=True) as custom_loop:
+        assert info2 == []
+        assert info3 == []
+
+        async def doit():
+            ag2 = my_generator(info3)
+            assert set(asyncio.get_event_loop()._asyncgens) == set()
+            await ag2.__anext__()
+            assert set(asyncio.get_event_loop()._asyncgens) == set([ag2])
+            await ag.__anext__()
+            assert set(asyncio.get_event_loop()._asyncgens) == set([ag2, ag])
+            await ag.__anext__()
+            assert info3 == [1]
+
+        custom_loop.run_until_complete(doit())
+        assert list(custom_loop.loop._asyncgens) == [ag]
+        assert info3 == [1]
+        assert info2 == [1, 2]
+
+    assert asyncio.get_event_loop() is original
+    assert not original.is_closed()
+
+    assert info3 == [1, "cancelled", ("done", asyncio.CancelledError)]
+    assert info2 == [1, 2, "cancelled", ("done", asyncio.CancelledError)]
+    assert info1 == [1, 2]
+
+    async def outside2():
+        try:
+            await outside_gen.__anext__()
+        except StopAsyncIteration:
+            pass
+
+    # Test that the outside loop isn't affected by the inside loop
+    original.run_until_complete(outside2())
+    assert info1 == [1, 2, 3, ("done", None)]
+
 describe "testing autouse":
 
     @pytest.fixture(autouse=True)
