@@ -21,9 +21,10 @@ generator fixtures.
 Changelog
 ---------
 
-0.5.5 - TBD
+0.6.0 - TBD
     * Fix bug where it was possible for an async generator fixture to
       be cleaned up even if it was never started.
+    * This library is now 3.7+ only
 
 0.5.4 - 26 January 2021
     * Added a ``--default-async-timeout`` option from the CLI. With many thanks
