@@ -104,7 +104,7 @@ async it "shows correctly for failing fixtures", name, request, tmp_path_factory
     matcher.fnmatch_lines(expected.split("\n"))
 
 
-@pytest.mark.async_timeout(4)
+@pytest.mark.async_timeout(5)
 async it "cleans up tests properly on interrupt":
     directory = os.path.join(this_dir, "interrupt_test")
     expected_file = os.path.join(directory, "expected")
