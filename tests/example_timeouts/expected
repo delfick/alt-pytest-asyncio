@@ -73,7 +73,7 @@ _______* ERROR at setup of test_seven ____*
 E   AssertionError: Took too long to complete: */example_timeouts*/conftest.py:13
 _______* ERROR at teardown of test_seven ____*
   + Exception Group Traceback (most recent call last):
-  | exceptiongroup.ExceptionGroup: errors during test teardown (2 sub-exceptions)
+  |*ExceptionGroup: errors during test teardown (2 sub-exceptions)
   +-+---------------- 1 ----------------
     | Traceback (most recent call last):
     | AssertionError: Took too long to complete: */conftest.py:20

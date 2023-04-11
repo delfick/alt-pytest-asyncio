@@ -6,6 +6,7 @@ import shutil
 import signal
 import socket
 import subprocess
+import sys
 import tempfile
 from contextlib import contextmanager
 
@@ -88,6 +89,7 @@ async it "shows correctly for failing fixtures", name, request, tmp_path_factory
 
 
 @pytest.mark.async_timeout(5)
+@pytest.mark.skipif(os.name == "nt", reason="Can't use async subprocess on windows")
 async it "cleans up tests properly on interrupt":
     directory = os.path.join(this_dir, "interrupt_test")
     expected_file = os.path.join(directory, "expected")
@@ -98,7 +100,9 @@ async it "cleans up tests properly on interrupt":
         expected = fle.read().strip()
 
     p = await asyncio.create_subprocess_exec(
-        shutil.which("pytest"),
+        sys.executable,
+        "-m",
+        "pytest",
         cwd=directory,
         stdout=subprocess.PIPE,
         stderr=subprocess.STDOUT,
