@@ -17,12 +17,12 @@ setup(
     , python_requires = ">= 3.7"
 
     , install_requires =
-      [ "pytest >= 3.0.6"
+      [ "pytest >= 7.0.0"
       ]
 
     , extras_require =
       { 'tests':
-        [ 'pytest==6.2.4'
+        [ 'pytest==7.3.0'
         , 'noseOfYeti[black]==2.4.1'
         , "nest-asyncio==1.0.0"
         ]

@@ -1,26 +1,16 @@
 # coding: spec
 
-from _pytest.pytester import Testdir as TD, LineMatcher
 from contextlib import contextmanager
 import subprocess
 import tempfile
 import asyncio
-import socket
-import signal
-import pytest
 import shutil
+import signal
+import socket
+import pytest
 import os
 
 this_dir = os.path.dirname(__file__)
-
-pytest_uses_paths = False
-try:
-    from _pytest.pytester import Pytester
-
-    pytest_uses_paths = True
-    TD = Pytester  # noqa
-except ImportError:
-    pass
 
 
 @contextmanager
@@ -66,15 +56,7 @@ def example_dir_factory(tmp_path_factory, name):
             else:
                 res = directory
 
-            try:
-                import py
-            except ImportError:
-                return res
-            else:
-                if pytest_uses_paths:
-                    return res
-
-                return py.path.local(str(res))
+            return res
 
     return Factory()
 
@@ -82,9 +64,9 @@ def example_dir_factory(tmp_path_factory, name):
 @pytest.mark.parametrize(
     "name", [name for name in os.listdir(this_dir) if name.startswith("example_")]
 )
-async it "shows correctly for failing fixtures", name, request, tmp_path_factory:
+async it "shows correctly for failing fixtures", name, request, tmp_path_factory, monkeypatch:
     factory = example_dir_factory(tmp_path_factory, name)
-    testdir = TD(request, factory)
+    testdir = pytest.Pytester(request, factory, monkeypatch)
     expected = factory.expected
     result = testdir.runpytest("--tb", "short")
     assert not result.errlines
@@ -100,7 +82,7 @@ async it "shows correctly for failing fixtures", name, request, tmp_path_factory
         if isinstance(lines, list):
             lines.append(line)
 
-    matcher = LineMatcher(lines)
+    matcher = pytest.LineMatcher(lines)
     matcher.fnmatch_lines(expected.split("\n"))
 
 
@@ -131,9 +113,5 @@ async it "cleans up tests properly on interrupt":
 
     want = expected.strip().split("\n")
 
-    if len(got) != len(want):
-        print("\n".join(got))
-        assert False, "expected different number of lines in output"
-
-    matcher = LineMatcher(got)
+    matcher = pytest.LineMatcher(got)
     matcher.fnmatch_lines(want)

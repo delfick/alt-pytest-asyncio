@@ -73,7 +73,6 @@ def _raise_maybe(func, info):
     lineno = func.__code__.co_firstlineno
 
     def raise_error():
-        __tracebackhide__ = True
         if info["cancelled"]:
             assert False, f"Took too long to complete: {fle}:{lineno}"
         raise info["e"]
