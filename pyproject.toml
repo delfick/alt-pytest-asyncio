@@ -1,3 +1,46 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "alt-pytest-asyncio"
+dynamic = ["version"]
+description = "Alternative pytest plugin to pytest-asyncio"
+readme = "README.rst"
+license = "MIT"
+requires-python = ">= 3.7"
+authors = [
+    { name = "Stephen Moore", email = "delfick755@gmail.com" },
+]
+classifiers = [
+    "Framework :: Pytest",
+    "Topic :: Software Development :: Testing",
+]
+dependencies = [
+    "pytest >= 7.0.0",
+]
+
+[project.optional-dependencies]
+tests = [
+    "nest-asyncio==1.0.0",
+    "noseOfYeti[black]==2.4.1",
+    "pytest==7.3.0",
+]
+
+[project.entry-points.pytest11]
+alt_pytest_asyncio = "alt_pytest_asyncio"
+
+[project.urls]
+Homepage = "https://github.com/delfick/alt-pytest-asyncio"
+
+[tool.hatch.version]
+path = "alt_pytest_asyncio/version.py"
+
+[tool.hatch.build.targets.sdist]
+include = [
+    "/alt_pytest_asyncio",
+]
+
 [tool.black]
 line-length = 100
 include = '\.py$'

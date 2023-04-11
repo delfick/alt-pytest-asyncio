@@ -11,6 +11,5 @@ DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
         --ignore-directory .mypy_cache \
         --ignore-directory dist \
         --ignore-directory build \
-        --ignore-directory alt_pytest_asyncio.egg-info \
         --ignore-directory tools \
 )
