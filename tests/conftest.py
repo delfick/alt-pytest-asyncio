@@ -1,7 +1,8 @@
 import asyncio
-import pytest
-import struct
 import socket
+import struct
+
+import pytest
 
 pytest_plugins = ["pytester"]
 

@@ -1,9 +1,10 @@
 # coding: spec
 
-from alt_pytest_asyncio.plugin import OverrideLoop
-
 import asyncio
+
 import pytest
+
+from alt_pytest_asyncio.plugin import OverrideLoop
 
 
 def get_event_loop():

@@ -1,12 +1,13 @@
-from alt_pytest_asyncio.async_converters import convert_fixtures, converted_async_test
-
-from _pytest._code.code import ExceptionInfo
-from functools import partial, wraps
-from collections import defaultdict
-import inspect
 import asyncio
-import pytest
+import inspect
 import sys
+from collections import defaultdict
+from functools import partial, wraps
+
+import pytest
+from _pytest._code.code import ExceptionInfo
+
+from alt_pytest_asyncio.async_converters import convert_fixtures, converted_async_test
 
 
 class AltPytestAsyncioPlugin:

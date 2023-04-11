@@ -1,7 +1,7 @@
-from setuptools import find_packages, setup
-import runpy
 import os
+import runpy
 
+from setuptools import find_packages, setup
 
 VERSION = runpy.run_path(
     os.path.join(os.path.dirname(__file__), "alt_pytest_asyncio", "version.py")

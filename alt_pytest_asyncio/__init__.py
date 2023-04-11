@@ -1,7 +1,7 @@
 """pytest-cov: avoid already-imported warning: PYTEST_DONT_REWRITE."""
-from alt_pytest_asyncio.version import VERSION
-
 import pytest
+
+from alt_pytest_asyncio.version import VERSION
 
 
 @pytest.hookimpl

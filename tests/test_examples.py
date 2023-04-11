@@ -1,14 +1,15 @@
 # coding: spec
 
-from contextlib import contextmanager
-import subprocess
-import tempfile
 import asyncio
+import os
 import shutil
 import signal
 import socket
+import subprocess
+import tempfile
+from contextlib import contextmanager
+
 import pytest
-import os
 
 this_dir = os.path.dirname(__file__)
 

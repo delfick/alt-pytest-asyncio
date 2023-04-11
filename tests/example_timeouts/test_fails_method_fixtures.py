@@ -1,6 +1,7 @@
 # coding: spec
 
 import asyncio
+
 import pytest
 
 describe "a class":
