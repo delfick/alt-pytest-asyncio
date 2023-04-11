@@ -25,6 +25,7 @@ Changelog
     * Changed the pytest dependency to be greater than pytest version 7
     * Using isort now
     * Went from setuptools to hatch
+    * CI now runs against python 3.11
 
 0.6.0 - 23 October 2021
     * Fix bug where it was possible for an async generator fixture to
