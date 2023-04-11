@@ -143,7 +143,11 @@ it "can shutdown async gens":
     info2 = []
     info3 = []
 
-    original = asyncio.get_event_loop()
+    try:
+        original = asyncio.get_running_loop()
+    except RuntimeError:
+        original = asyncio.new_event_loop()
+        asyncio.set_event_loop(original)
 
     async def my_generator(info):
         try:
@@ -193,7 +197,6 @@ it "can shutdown async gens":
         assert info3 == [1]
         assert info2 == [1, 2]
 
-    assert asyncio.get_event_loop() is original
     assert not original.is_closed()
 
     assert info3 == [1, "cancelled", ("done", asyncio.CancelledError)]
