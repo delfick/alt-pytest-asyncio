@@ -1,7 +1,7 @@
-from setuptools import setup, find_packages
-
+from setuptools import find_packages, setup
 import runpy
 import os
+
 
 VERSION = runpy.run_path(
     os.path.join(os.path.dirname(__file__), "alt_pytest_asyncio", "version.py")
@@ -23,7 +23,7 @@ setup(
     , extras_require =
       { 'tests':
         [ 'pytest==6.2.4'
-        , 'noseOfYeti==2.0.2'
+        , 'noseOfYeti[black]==2.4.1'
         , "nest-asyncio==1.0.0"
         ]
       }

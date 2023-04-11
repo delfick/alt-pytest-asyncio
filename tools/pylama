@@ -1,5 +1,0 @@
-#!/usr/bin/env python3
-
-__import__("venvstarter").manager("noy_pylama").add_pypi_deps(
-    "pylama==7.7.1", "noseOfYeti==2.0.2"
-).run()

@@ -1,5 +1,0 @@
-#!/usr/bin/env python3
-
-__import__("venvstarter").manager(None).named(".black").add_pypi_deps(
-    "noy_black==0.2.1", "regex==2021.9.30"
-).run()

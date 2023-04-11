@@ -1,0 +1,16 @@
+#!/bin/bash
+
+# Helper for searching code base without searching through external code
+
+DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
+
+(
+    cd $DIR
+    exec ack "$@" \
+        --ignore-directory .tox \
+        --ignore-directory .mypy_cache \
+        --ignore-directory dist \
+        --ignore-directory build \
+        --ignore-directory alt_pytest_asyncio.egg-info \
+        --ignore-directory tools \
+)

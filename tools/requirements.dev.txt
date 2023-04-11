@@ -1,0 +1,10 @@
+pylama-dmypy==0.4
+pylama==8.4.1
+neovim==0.3.1
+tox==4.4.11
+isort==5.12.0
+python-lsp-server==1.7.2
+pylsp-mypy==0.6.6
+pyls-isort==0.2.2
+python-lsp-black==1.2.1
+mslex==0.3.0; sys.platform == 'win32'

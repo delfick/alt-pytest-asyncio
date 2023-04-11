@@ -6,7 +6,15 @@ exclude = '''
      \.git
    | \.tox
    | dist
-   | tools
-   | docs
+   | tools/\.python
 )/
 '''
+
+[tool.isort]
+profile = "black"
+skip_glob = [
+   ".git/*",
+   ".tox/*",
+   "dist/*",
+   "tools/.*",
+]
