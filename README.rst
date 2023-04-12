@@ -21,7 +21,7 @@ generator fixtures.
 Changelog
 ---------
 
-0.7.0 - TBD
+0.7.0 - 12 April 2023
     * Changed the pytest dependency to be greater than pytest version 7
     * Using isort now
     * Went from setuptools to hatch
