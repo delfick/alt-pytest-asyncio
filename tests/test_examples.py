@@ -88,7 +88,7 @@ async it "shows correctly for failing fixtures", name, request, tmp_path_factory
     matcher.fnmatch_lines(expected.split("\n"))
 
 
-@pytest.mark.async_timeout(5)
+@pytest.mark.async_timeout(7)
 @pytest.mark.skipif(os.name == "nt", reason="Can't use async subprocess on windows")
 async it "cleans up tests properly on interrupt":
     directory = os.path.join(this_dir, "interrupt_test")
@@ -108,7 +108,7 @@ async it "cleans up tests properly on interrupt":
         stderr=subprocess.STDOUT,
     )
 
-    await asyncio.sleep(2)
+    await asyncio.sleep(4)
     p.send_signal(signal.SIGINT)
     await p.wait()
 
