@@ -21,6 +21,10 @@ generator fixtures.
 Changelog
 ---------
 
+0.7.1 - 23 June 2023
+    * No functional changes, only fixing how hatchling understands the
+      license field in the pyproject.toml with thanks to @piotrm-nvidia
+
 0.7.0 - 12 April 2023
     * Changed the pytest dependency to be greater than pytest version 7
     * Using isort now
