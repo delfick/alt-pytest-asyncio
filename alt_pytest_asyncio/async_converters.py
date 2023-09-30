@@ -233,8 +233,13 @@ async def async_runner(func, timeout, info, args, kwargs):
 
     def timeout_task(task):
         if not task.done():
-            info["cancelled"] = True
-            task.cancel()
+            # If the debugger is active then don't cancel, so that debugging may continue
+            # sys.gettrace is not a language feature and notguaranteed to be available
+            # on all python implementations, so we see if it exists
+            gettrace = getattr(sys, "gettrace", None)
+            if gettrace is None or gettrace() is None:
+                info["cancelled"] = True
+                task.cancel()
 
     asyncio.get_event_loop().call_later(timeout, timeout_task, current_task)
 

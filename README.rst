@@ -21,6 +21,9 @@ generator fixtures.
 Changelog
 ---------
 
+0.7.2 - TBD
+    * Timeouts don't take affect if the debugger is active
+
 0.7.1 - 23 June 2023
     * No functional changes, only fixing how hatchling understands the
       license field in the pyproject.toml with thanks to @piotrm-nvidia
@@ -158,6 +161,10 @@ The default timeout is 5 seconds. You can change this default by setting the
 
 This setting is also available from the CLI using the ``--default-async-timeout``
 option.
+
+Note that if the timeout fires whilst you have the debugger active then the timeout
+will not cancel the current test. This is determined by checking if ``sys.gettrace()``
+returns a non-None value.
 
 Overriding the loop
 -------------------
