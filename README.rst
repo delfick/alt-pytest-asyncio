@@ -21,7 +21,7 @@ generator fixtures.
 Changelog
 ---------
 
-0.7.2 - TBD
+0.7.2 - 1 October 2023
     * Timeouts don't take affect if the debugger is active
 
 0.7.1 - 23 June 2023
