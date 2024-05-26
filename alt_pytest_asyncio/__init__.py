@@ -1,4 +1,5 @@
 """pytest-cov: avoid already-imported warning: PYTEST_DONT_REWRITE."""
+
 import pytest
 
 from alt_pytest_asyncio.version import VERSION

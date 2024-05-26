@@ -13,19 +13,11 @@ if platform.system() == "Windows":
 
     shlex = mslex  # noqa
 
-if sys.version_info < (3, 10):
-    Dict = tp.Dict
-    List = tp.List
-else:
-    Dict = dict
-    List = list
-
 
 class Command:
     __is_command__: bool
 
-    def __call__(self, bin_dir: Path, args: List[str]) -> None:
-        ...
+    def __call__(self, bin_dir: Path, args: list[str]) -> None: ...
 
 
 def command(func: tp.Callable) -> tp.Callable:
@@ -42,7 +34,7 @@ def run(*args: tp.Union[str, Path]) -> None:
 
 
 class App:
-    commands: Dict[str, Command]
+    commands: dict[str, Command]
 
     def __init__(self):
         self.commands = {}
@@ -57,7 +49,7 @@ class App:
                 ), f"Expected '{name}' to have correct signature, have {inspect.signature(val)} instead of {compare}"
                 self.commands[name] = val
 
-    def __call__(self, args: List[str]) -> None:
+    def __call__(self, args: list[str]) -> None:
         bin_dir = Path(sys.executable).parent
 
         if args and args[0] in self.commands:
@@ -68,18 +60,18 @@ class App:
         sys.exit(f"Unknown command:\nAvailable: {sorted(self.commands)}\nWanted: {args}")
 
     @command
-    def format(self, bin_dir: Path, args: List[str]) -> None:
+    def format(self, bin_dir: Path, args: list[str]) -> None:
         if not args:
             args = [".", *args]
         run(bin_dir / "black", *args)
         run(bin_dir / "isort", *args)
 
     @command
-    def lint(self, bin_dir: Path, args: List[str]) -> None:
+    def lint(self, bin_dir: Path, args: list[str]) -> None:
         run(bin_dir / "pylama", *args)
 
     @command
-    def tests(self, bin_dir: Path, args: List[str]) -> None:
+    def tests(self, bin_dir: Path, args: list[str]) -> None:
         if "-q" not in args:
             args = ["-q", *args]
 
@@ -115,7 +107,7 @@ class App:
         run(bin_dir / "pytest", *files, *args)
 
     @command
-    def tox(self, bin_dir: Path, args: List[str]) -> None:
+    def tox(self, bin_dir: Path, args: list[str]) -> None:
         run(bin_dir / "tox", *args)
 
 

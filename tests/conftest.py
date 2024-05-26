@@ -14,8 +14,8 @@ def change_pytester(pytestconfig):
 
 
 @pytest.hookspec(firstresult=True)
-def pytest_ignore_collect(path):
-    if path.basename.startswith("example_"):
+def pytest_ignore_collect(collection_path):
+    if collection_path.name.startswith("example_"):
         return True
-    if path.basename == "interrupt_test":
+    if collection_path.name == "interrupt_test":
         return True

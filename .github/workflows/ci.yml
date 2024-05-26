@@ -19,9 +19,9 @@ jobs:
       fail-fast: false
       matrix:
         os: [ubuntu-latest, macos-latest, windows-latest]
-        python-version: [3.7, 3.8, 3.9, "3.10", "3.11"]
+        python-version: ["3.11", "3.12"]
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
       - name: Set up Python
         uses: actions/setup-python@v4
         with:
@@ -35,14 +35,6 @@ jobs:
         env:
           VENVSTARTER_ONLY_MAKE_VENV: "1"
         run: |
-          if [ "$RUNNER_OS" == "Windows" ]; then
-            if ! python -c 'import sys; sys.exit(1) if sys.version_info < (3, 9) else None'; then
-              # Need for python 3.7 and 3.8 on windows
-              python -m venv tools/.python
-              ./tools/.python/Scripts/python -m pip install setuptools pip -U
-            fi
-          fi
-
           python ./tools/venv
 
       - name: Run tests
