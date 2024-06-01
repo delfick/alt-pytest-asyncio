@@ -21,9 +21,10 @@ generator fixtures.
 Changelog
 ---------
 
-0.8.0 - TBD
+0.8.0 - 1 June 2024
     * Provide simple support for tests being aware of asyncio.Context
     * Remove support for python less than 3.11
+    * Added support for asyncio ContextVars
 
 0.7.2 - 1 October 2023
     * Timeouts don't take affect if the debugger is active
