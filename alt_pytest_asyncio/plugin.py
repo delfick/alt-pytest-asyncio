@@ -89,11 +89,11 @@ class AltPytestAsyncioPlugin:
             def run_obj(*args, **kwargs):
                 try:
                     self.ctx.run(lambda: None)
-                    run = lambda func, *a, **kw: self.ctx.run(func, *a, **kw)
+                    run = lambda func: self.ctx.run(func)
                 except RuntimeError:
-                    run = lambda func, *a, **kw: func(*a, **kw)
+                    run = lambda func: func()
 
-                run(original, *args, **kwargs)
+                run(partial(original, *args, **kwargs))
 
             pyfuncitem.obj = run_obj
 

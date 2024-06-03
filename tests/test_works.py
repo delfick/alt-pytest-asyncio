@@ -53,3 +53,13 @@ describe "A class":
 
     it "uses our fixtures", a_value_times_two:
         assert a_value_times_two == 2
+
+
+@pytest.mark.parametrize("func", [1])
+it "allows func as a parametrize", func:
+    assert func == 1
+
+
+@pytest.mark.parametrize("func", [1])
+async it "allows func as a parametrize for async too", func:
+    assert func == 1
