@@ -21,7 +21,7 @@ generator fixtures.
 Changelog
 ---------
 
-0.8.1 - TBD
+0.8.1 - 3 June 2024
     * Remove a namespace conflict that restricted what names could be used as
       parametrize arguments.
 
