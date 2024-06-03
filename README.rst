@@ -21,6 +21,10 @@ generator fixtures.
 Changelog
 ---------
 
+0.8.1 - TBD
+    * Remove a namespace conflict that restricted what names could be used as
+      parametrize arguments.
+
 0.8.0 - 1 June 2024
     * Provide simple support for tests being aware of asyncio.Context
     * Remove support for python less than 3.11

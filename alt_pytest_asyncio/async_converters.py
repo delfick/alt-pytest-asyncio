@@ -86,7 +86,7 @@ def convert_sync_gen_fixture(ctx, fixturedef):
     fixturedef.func = run_fixture
 
 
-def converted_async_test(ctx, test_tasks, func, timeout, *args, **kwargs):
+def converted_async_test(ctx, test_tasks, func, timeout, /, *args, **kwargs):
     """Used to replace async tests"""
     __tracebackhide__ = True
 
