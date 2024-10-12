@@ -1,5 +1,3 @@
-# coding: spec
-
 import asyncio
 
 import pytest
@@ -32,34 +30,36 @@ async def a_list(a_list_fut):
         assert set(lst) == set(range(4))
 
 
-async it "works for async functions", a_list:
+async def test_works_for_async_functions(a_list):
     await asyncio.sleep(0.01)
     a_list.append(0)
     assert True
 
-it "works for non async functions", a_list:
+
+def test_works_for_non_async_functions(a_list):
     a_list.append(1)
     assert True
 
-describe "A class":
-    async it "works for async methods", a_list:
+
+class TestAClass:
+    async def test_works_for_async_methods(self, a_list):
         await asyncio.sleep(0.01)
         a_list.append(2)
         assert True
 
-    it "works for non async methods", a_list:
+    def test_works_for_non_async_methods(self, a_list):
         a_list.append(3)
         assert True
 
-    it "uses our fixtures", a_value_times_two:
+    def test_uses_our_fixtures(self, a_value_times_two):
         assert a_value_times_two == 2
 
 
 @pytest.mark.parametrize("func", [1])
-it "allows func as a parametrize", func:
+def test_allows_func_as_a_parametrize(func):
     assert func == 1
 
 
 @pytest.mark.parametrize("func", [1])
-async it "allows func as a parametrize for async too", func:
+async def test_allows_func_as_a_parametrize_for_async_too(func):
     assert func == 1

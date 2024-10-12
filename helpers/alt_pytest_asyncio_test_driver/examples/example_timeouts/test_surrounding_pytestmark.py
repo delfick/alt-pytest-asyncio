@@ -1,5 +1,3 @@
-# coding: spec
-
 import asyncio
 
 import pytest
@@ -47,23 +45,29 @@ async def fixture_timeout_module():
     return 1
 
 
-it "one", fixture_timeout_in_finally:
+def test_one(fixture_timeout_in_finally):
     pass
 
-it "two", fixture_timeout_in_setup:
+
+def test_two(fixture_timeout_in_setup):
     pass
 
-it "three", fixture_timeout:
+
+def test_three(fixture_timeout):
     pass
 
-it "four", fixture_timeout_in_setup_module:
+
+def test_four(fixture_timeout_in_setup_module):
     pass
 
-it "five", fixture_timeout_module:
+
+def test_five(fixture_timeout_module):
     pass
 
-it "six", fixture_timeout_in_setup_session:
+
+def test_six(fixture_timeout_in_setup_session):
     pass
 
-it "seven", fixture_timeout_session:
+
+def test_seven(fixture_timeout_session):
     pass

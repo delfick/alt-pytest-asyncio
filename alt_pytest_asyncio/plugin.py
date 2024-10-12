@@ -157,7 +157,7 @@ def run_coro_as_main(loop, coro):
             exc_type = type(exc)
             tb = exc.__traceback__
         info = ExceptionInfo((exc_type, exc, tb), "")
-        print(info.getrepr(style="short"))  # noqa: T201
+        print(info.getrepr(style="short"))
         sys.exit(1)
     finally:
         cancel_all_tasks(loop, ignore_errors_from_tasks=[task])

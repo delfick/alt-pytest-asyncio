@@ -1,5 +1,3 @@
-# coding: spec
-
 import pytest
 
 
@@ -29,11 +27,13 @@ async def fixture_fails_in_finally():
         await one()
 
 
-it "fails on fixture returns", fixture_returns:
+def test_fails_on_fixture_returns(fixture_returns):
     pass
 
-it "fails on fixture yields", fixture_yields:
+
+def test_fails_on_fixture_yields(fixture_yields):
     pass
 
-it "fails on fixture fails in finally", fixture_fails_in_finally:
+
+def test_fails_on_fixture_fails_in_finally(fixture_fails_in_finally):
     pass

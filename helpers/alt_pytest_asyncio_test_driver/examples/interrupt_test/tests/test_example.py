@@ -1,5 +1,3 @@
-# coding: spec
-
 import asyncio
 
 import pytest
@@ -13,19 +11,20 @@ async def thing():
         print("THING FINALLY")
 
 
-async it "aa has a passing test":
+async def test_aa_has_a_passing_test():
     pass
 
-async it "bb shows failed tests":
+
+async def test_bb_shows_failed_tests():
     assert False, "NOOOOO"
 
 
 @pytest.mark.async_timeout(1)
-async it "cc shows timedout tests":
+async def test_cc_shows_timedout_tests():
     await asyncio.sleep(3)
 
-async it "dd executes finally on interrupt", pytestconfig, thing:
 
+async def test_dd_executes_finally_on_interrupt(pytestconfig, thing):
     async def wat():
         while True:
             await asyncio.sleep(0.1)
@@ -37,5 +36,6 @@ async it "dd executes finally on interrupt", pytestconfig, thing:
     finally:
         print("TEST FINALLY")
 
-async it "ee doesn't try to make a test after loop is closed":
+
+async def test_ee_does_not_try_to_make_a_test_after_loop_is_closed():
     await asyncio.get_event_loop().create_future()

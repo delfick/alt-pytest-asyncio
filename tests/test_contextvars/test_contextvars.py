@@ -1,5 +1,3 @@
-# coding: spec
-
 import alt_pytest_asyncio_test_driver.contextvars_for_test as ctxvars
 import pytest
 
@@ -29,7 +27,7 @@ async def f_set_conftest_cm_module(e_set_conftest_cm_test):
 
 
 @pytest.mark.order(1)
-async it "gets session modified vars":
+async def test_gets_session_modified_vars():
     assert ctxvars.a.get() == "a_set_conftest_fixture_session_autouse"
     assert ctxvars.b.get() == "b_set_conftest_cm_session_autouse"
     assert ctxvars.d.get() == "d_set_conftest_fixture_test"
@@ -39,7 +37,7 @@ async it "gets session modified vars":
 
 
 @pytest.mark.order(2)
-async it "can use a fixture to change the var", c_set_conftest_fixture_test:
+async def test_can_use_a_fixture_to_change_the_var(c_set_conftest_fixture_test):
     assert ctxvars.a.get() == "a_set_conftest_fixture_session_autouse"
     assert ctxvars.b.get() == "b_set_conftest_cm_session_autouse"
     assert ctxvars.d.get() == "d_set_conftest_fixture_test"
@@ -51,7 +49,7 @@ async it "can use a fixture to change the var", c_set_conftest_fixture_test:
 
 
 @pytest.mark.order(3)
-async it "does not reset contextvars for you":
+async def test_does_not_reset_contextvars_for_you():
     """
     It's too hard to know when a contextvar should be reset. It should
     be up to whatever sets the contextvar to know when it should be unset
@@ -67,7 +65,7 @@ async it "does not reset contextvars for you":
 
 
 @pytest.mark.order(4)
-async it "works in context manager fixtures", c_set_conftest_cm_test:
+async def test_works_in_context_manager_fixtures(c_set_conftest_cm_test):
     """
     It's too hard to know when a contextvar should be reset. It should
     be up to whatever sets the contextvar to know when it should be unset
@@ -83,7 +81,7 @@ async it "works in context manager fixtures", c_set_conftest_cm_test:
 
 
 @pytest.mark.order(5)
-it "resets the contextvar successfully when cm attempts that":
+def test_resets_the_contextvar_successfully_when_cm_attempts_that():
     """
     It's too hard to know when a contextvar should be reset. It should
     be up to whatever sets the contextvar to know when it should be unset

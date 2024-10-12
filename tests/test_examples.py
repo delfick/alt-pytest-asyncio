@@ -1,6 +1,3 @@
-# coding: spec
-
-from alt_pytest_asyncio_test_driver import available_examples
 import asyncio
 import importlib.resources
 import os
@@ -13,6 +10,7 @@ import tempfile
 from contextlib import contextmanager
 
 import pytest
+from alt_pytest_asyncio_test_driver import available_examples
 
 
 @contextmanager
@@ -60,7 +58,7 @@ def example_dir_factory(tmp_path_factory, name):
 
 
 @pytest.mark.parametrize("name", available_examples)
-async it "shows correctly for failing fixtures", name, request, tmp_path_factory, monkeypatch:
+async def test_shows_correctly_for_failing_fixtures(name, request, tmp_path_factory, monkeypatch):
     factory = example_dir_factory(tmp_path_factory, name)
     testdir = pytest.Pytester(request, factory, monkeypatch)
     expected = factory.expected
@@ -84,8 +82,10 @@ async it "shows correctly for failing fixtures", name, request, tmp_path_factory
 
 @pytest.mark.async_timeout(7)
 @pytest.mark.skipif(os.name == "nt", reason="Can't use async subprocess on windows")
-async it "cleans up tests properly on interrupt":
-    examples = importlib.resources.files("alt_pytest_asyncio_test_driver") / "examples" / "interrupt_test"
+async def test_cleans_up_tests_properly_on_interrupt():
+    examples = (
+        importlib.resources.files("alt_pytest_asyncio_test_driver") / "examples" / "interrupt_test"
+    )
     assert examples.is_dir()
     expected = (examples / "expected").read_text()
 

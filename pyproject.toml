@@ -61,8 +61,6 @@ line-length = 99
 extend-exclude = [
     ".DS_Store",
     "tools/.bootstrap-venv",
-    "tests",
-    "helpers/*/examples",
     "__pycache__",
 ]
 
@@ -71,7 +69,6 @@ select = [
     "B008",  # mutable objects as function argument defaults
     "B015",  # flake8-bugbear (useless-comparison)
     "I",  # isort
-    "T20",  # flake8-print
     "UP",  # pyupgrade
     "RUF",
     "F",

@@ -1,5 +1,3 @@
-# coding: spec
-
 import asyncio
 
 import pytest
@@ -54,8 +52,7 @@ async def things(futs, loop_info, works=False):
             assert found == [None]
 
 
-it "won't let you do run_until_complete outside the context manager":
-
+def test_will_not_let_you_do_run_until_complete_outside_the_context_manager():
     info = {"coro": None}
 
     async def blah():
@@ -66,15 +63,14 @@ it "won't let you do run_until_complete outside the context manager":
         OverrideLoop().run_until_complete(coro)
         assert False, "should have risen an error"
     except Exception as error:
-        msg = (
-            "Cannot use run_until_complete on OverrideLoop outside of using it as a context manager"
-        )
+        msg = "Cannot use run_until_complete on OverrideLoop outside of using it as a context manager"
         assert str(error) == msg
 
     assert info["coro"] is not None
     get_event_loop().run_until_complete(info["coro"])
 
-it "can replace the loop", fut:
+
+def test_can_replace_the_loop(fut):
     info = {}
     futs = {"a": fut}
 
@@ -104,8 +100,8 @@ def loop_info():
     return {}
 
 
-describe "no new loop":
-    it "sets None":
+class TestNoNewLoop:
+    def test_sets_None(self):
         info = {"coro": None}
 
         original = get_event_loop()
@@ -138,7 +134,7 @@ describe "no new loop":
         get_event_loop().run_until_complete(info["coro"])
 
 
-it "can shutdown async gens":
+def test_can_shutdown_async_gens():
     info1 = []
     info2 = []
     info3 = []
@@ -213,8 +209,8 @@ it "can shutdown async gens":
     original.run_until_complete(outside2())
     assert info1 == [1, 2, 3, ("done", None)]
 
-describe "testing autouse":
 
+class TestTestingAutoUse:
     @pytest.fixture(autouse=True)
     def custom_loop(self, loop_info):
         assert not loop_info
@@ -282,18 +278,22 @@ describe "testing autouse":
     def fix5(self, loop_info):
         loop_info["fix5a"] = get_event_loop()
 
-    it "works", fix1, fix2, fix3, fix4, fix5, loop_info:
+    def test_works(self, fix1, fix2, fix3, fix4, fix5, loop_info):
         loop_info["test"] = get_event_loop()
         assert list(loop_info) == ["original", "fix1", "fix2", "fix3a", "fix4a", "fix5a", "test"]
         self.assertLoopInfo(loop_info, closed=False)
 
-    it "has the loop on custom_loop", custom_loop, fix1, fix2, fix3, fix4, fix5, loop_info:
+    def test_has_the_loop_on_custom_loop(
+        self, custom_loop, fix1, fix2, fix3, fix4, fix5, loop_info
+    ):
         loop_info["test"] = get_event_loop()
         assert list(loop_info) == ["original", "fix1", "fix2", "fix3a", "fix4a", "fix5a", "test"]
         assert custom_loop.loop is get_event_loop()
         self.assertLoopInfo(loop_info, closed=False)
 
-    it "can use futures from fixtures", custom_loop, fix1, fix2, fix3, fix4, fix5, loop_info, fut:
+    def test_can_use_futures_from_fixtures(
+        self, custom_loop, fix1, fix2, fix3, fix4, fix5, loop_info, fut
+    ):
         loop_info["test"] = get_event_loop()
 
         futs = {"a": fut, "b": get_event_loop().create_future()}

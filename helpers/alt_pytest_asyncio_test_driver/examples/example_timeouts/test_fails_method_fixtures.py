@@ -1,11 +1,9 @@
-# coding: spec
-
 import asyncio
 
 import pytest
 
-describe "a class":
 
+class TestAClass:
     @pytest.fixture()
     @pytest.mark.async_timeout(0.01)
     async def fixture_timeout(self):
@@ -26,14 +24,14 @@ describe "a class":
         finally:
             await asyncio.sleep(1)
 
-    it "2one", fixture_timeout:
+    def test_2one(self, fixture_timeout):
         pass
 
-    it "2two", fixture_timeout_in_setup:
+    def test_2two(self, fixture_timeout_in_setup):
         pass
 
-    it "2three", fixture_timeout_in_teardown:
+    def test_2three(self, fixture_timeout_in_teardown):
         pass
 
-    it "2four", fixture_timeout_in_teardown_session:
+    def test_2four(self, fixture_timeout_in_teardown_session):
         pass
