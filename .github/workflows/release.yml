@@ -19,7 +19,7 @@ jobs:
           python-version: "3.13"
 
       - id: build
-        run: uv build
+        run: ./tools/uv build
 
       - id: version
         run: |

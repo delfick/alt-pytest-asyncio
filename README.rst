@@ -21,6 +21,10 @@ generator fixtures.
 Changelog
 ---------
 
+0.8.2 - 12 October 2024
+    * Added type annotations
+    * CI now tests against python 3.13
+
 0.8.1 - 3 June 2024
     * Remove a namespace conflict that restricted what names could be used as
       parametrize arguments.
