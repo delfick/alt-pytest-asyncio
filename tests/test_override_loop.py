@@ -185,6 +185,8 @@ def test_can_shutdown_async_gens() -> None:
     ag = my_generator(info2)
 
     with OverrideLoop(new_loop=True) as custom_loop:
+        assert custom_loop.loop is not None
+
         assert info2 == []
         assert info3 == []
 

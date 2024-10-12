@@ -10,12 +10,37 @@ that you don't get asyncio internals in the errors.
 """
 
 import asyncio
+import contextvars
 import inspect
 import sys
+from collections.abc import AsyncGenerator, Awaitable, Callable, Coroutine, Generator
 from functools import wraps
+from typing import TYPE_CHECKING, Any, NoReturn, NotRequired, ParamSpec, TypedDict, TypeVar
+
+import pytest
+
+P_Args = ParamSpec("P_Args")
+T_Ret = TypeVar("T_Ret")
 
 
-def convert_fixtures(ctx, fixturedef, request, node):
+class RunInfo(TypedDict):
+    e: NotRequired[BaseException]
+    func: NotRequired[Callable[..., object]]
+    ran_once: NotRequired[bool]
+    cancelled: bool
+
+
+class GenRunInfo(RunInfo):
+    gen_obj: AsyncGenerator[object]
+    finalizer: NotRequired[bool]
+
+
+def convert_fixtures(
+    ctx: contextvars.Context,
+    fixturedef: pytest.FixtureDef[object],
+    request: pytest.FixtureRequest,
+    node: pytest.Item,
+) -> None:
     """Used to replace async fixtures"""
     if not hasattr(fixturedef, "func"):
         return
@@ -25,55 +50,66 @@ def convert_fixtures(ctx, fixturedef, request, node):
 
     if inspect.iscoroutinefunction(fixturedef.func):
         convert_async_coroutine_fixture(ctx, fixturedef, request, node)
-        fixturedef.func.__alt_asyncio_pytest_converted__ = True
+        fixturedef.func.__alt_asyncio_pytest_converted__ = True  # type: ignore[attr-defined]
 
     elif inspect.isasyncgenfunction(fixturedef.func):
         convert_async_gen_fixture(ctx, fixturedef, request, node)
-        fixturedef.func.__alt_asyncio_pytest_converted__ = True
+        fixturedef.func.__alt_asyncio_pytest_converted__ = True  # type: ignore[attr-defined]
 
     elif inspect.isgeneratorfunction(fixturedef.func):
         convert_sync_gen_fixture(ctx, fixturedef)
-        fixturedef.func.__alt_asyncio_pytest_converted__ = True
+        fixturedef.func.__alt_asyncio_pytest_converted__ = True  # type: ignore[attr-defined]
 
     else:
         convert_sync_fixture(ctx, fixturedef)
-        fixturedef.func.__alt_asyncio_pytest_converted__ = True
+        fixturedef.func.__alt_asyncio_pytest_converted__ = True  # type: ignore[attr-defined]
 
 
-def convert_sync_fixture(ctx, fixturedef):
+def convert_sync_fixture(ctx: contextvars.Context, fixturedef: pytest.FixtureDef[object]) -> None:
     """
     Used to make sure a non-async fixture is run in our
     asyncio contextvars
     """
-    original = fixturedef.func
+    original: Callable[..., object] = fixturedef.func
 
     @wraps(original)
-    def run_fixture(*args, **kwargs):
+    def run_fixture(*args: object, **kwargs: object) -> object:
         try:
             ctx.run(lambda: None)
-            run = lambda func, *a, **kw: ctx.run(func, *a, **kw)
+
+            def run(func: Callable[..., object], *a: object, **kw: object) -> object:
+                return ctx.run(func, *a, **kw)
         except RuntimeError:
-            run = lambda func, *a, **kw: func(*a, **kw)
+
+            def run(func: Callable[..., object], *a: object, **kw: object) -> object:
+                return func(*a, **kw)
 
         return run(original, *args, **kwargs)
 
-    fixturedef.func = run_fixture
+    fixturedef.func = run_fixture  # type: ignore[misc]
 
 
-def convert_sync_gen_fixture(ctx, fixturedef):
+def convert_sync_gen_fixture(
+    ctx: contextvars.Context, fixturedef: pytest.FixtureDef[object]
+) -> None:
     """
     Used to make sure a non-async generator fixture is run in our
     asyncio contextvars
     """
-    original = fixturedef.func
+    _original: Any = fixturedef.func
+    original: Callable[..., Generator[object, None, None]] = _original
 
     @wraps(original)
-    def run_fixture(*args, **kwargs):
+    def run_fixture(*args: object, **kwargs: object) -> object:
         try:
             ctx.run(lambda: None)
-            run = lambda func, *a, **kw: ctx.run(func, *a, **kw)
+
+            def run(func: Callable[..., object], *a: object, **kw: object) -> object:
+                return ctx.run(func, *a, **kw)
         except RuntimeError:
-            run = lambda func, *a, **kw: func(*a, **kw)
+
+            def run(func: Callable[..., object], *a: object, **kw: object) -> object:
+                return func(*a, **kw)
 
         cm = original(*args, **kwargs)
         value = run(cm.__next__)
@@ -83,27 +119,35 @@ def convert_sync_gen_fixture(ctx, fixturedef):
         except StopIteration:
             pass
 
-    fixturedef.func = run_fixture
+    fixturedef.func = run_fixture  # type: ignore[misc]
 
 
-def converted_async_test(ctx, test_tasks, func, timeout, /, *args, **kwargs):
+def converted_async_test(
+    ctx: contextvars.Context,
+    test_tasks: dict[asyncio.AbstractEventLoop, list[asyncio.Task[object]]],
+    func: Callable[P_Args, Awaitable[T_Ret]],
+    timeout: float,
+    /,
+    *args: P_Args.args,
+    **kwargs: P_Args.kwargs,
+) -> T_Ret:
     """Used to replace async tests"""
     __tracebackhide__ = True
 
-    info = {}
+    info: RunInfo = {"cancelled": False}
     loop = asyncio.get_event_loop_policy().get_event_loop()
 
-    def look_at_task(t):
+    def look_at_task(t: asyncio.Task[object]) -> None:
         test_tasks[loop].append(t)
 
     info["func"] = func
 
-    return _run_and_raise(
+    return _run_and_raise(  # type: ignore[return-value]
         ctx, loop, info, func, async_runner(func, timeout, info, args, kwargs), look_at_task
     )
 
 
-def _find_async_timeout(func, node):
+def _find_async_timeout(func: Callable[..., object], node: pytest.Item) -> float:
     timeout = float(
         node.config.getoption("default_async_timeout", None)
         or node.config.getini("default_async_timeout")
@@ -121,7 +165,7 @@ def _find_async_timeout(func, node):
     return timeout
 
 
-def _raise_maybe(func, info):
+def _raise_maybe(func: Callable[..., object], info: RunInfo) -> None:
     __tracebackhide__ = True
 
     if hasattr(func, "__original__"):
@@ -132,7 +176,7 @@ def _raise_maybe(func, info):
         func = func.__func__
     lineno = func.__code__.co_firstlineno
 
-    def raise_error():
+    def raise_error() -> NoReturn:
         if info["cancelled"]:
             assert False, f"Took too long to complete: {fle}:{lineno}"
         raise info["e"]
@@ -143,10 +187,17 @@ def _raise_maybe(func, info):
         raise_error()
 
 
-def _run_and_raise(ctx, loop, info, func, coro, look_at_task=None):
+def _run_and_raise(
+    ctx: contextvars.Context,
+    loop: asyncio.AbstractEventLoop,
+    info: RunInfo,
+    func: Callable[P_Args, T_Ret],
+    coro: Coroutine[object, object, T_Ret],
+    look_at_task: Callable[[asyncio.Task[T_Ret]], None] | None = None,
+) -> T_Ret:
     __tracebackhide__ = True
 
-    def silent_done_task(res):
+    def silent_done_task(res: asyncio.Future[T_Ret]) -> None:
         if res.cancelled():
             pass
         res.exception()
@@ -163,7 +214,12 @@ def _run_and_raise(ctx, loop, info, func, coro, look_at_task=None):
     return res
 
 
-def _wrap(fixturedef, extras, override, func):
+def _wrap(
+    fixturedef: pytest.FixtureDef[object],
+    extras: list[str],
+    override: Callable[..., T_Ret],
+    func: Callable[P_Args, object],
+) -> Callable[P_Args, T_Ret]:
     """
     Used to wrap a fixture so that we get extra information to be given to
     override and remove those extra information from kwargs so that the override
@@ -188,11 +244,11 @@ def _wrap(fixturedef, extras, override, func):
 
     for extra in extras:
         if extra not in fixturedef.argnames:
-            fixturedef.argnames += (extra,)
+            fixturedef.argnames += (extra,)  # type: ignore[misc]
             strip[extra] = True
 
     @wraps(func)
-    def wrapper(*args, **kwargs):
+    def wrapper(*args: P_Args.args, **kwargs: P_Args.kwargs) -> T_Ret:
         __tracebackhide__ = True
 
         got = {}
@@ -203,39 +259,54 @@ def _wrap(fixturedef, extras, override, func):
 
         return override(got, *args, **kwargs)
 
-    wrapper.__original__ = func
+    wrapper.__original__ = func  # type: ignore[attr-defined]
 
     return wrapper
 
 
-def convert_async_coroutine_fixture(ctx, fixturedef, request, node):
+def convert_async_coroutine_fixture(
+    ctx: contextvars.Context,
+    fixturedef: pytest.FixtureDef[object],
+    request: pytest.FixtureRequest,
+    node: pytest.Item,
+) -> None:
     """
     Run our async fixture in our event loop and capture the error from
     inside the loop.
     """
-    func = fixturedef.func
+    _func: Any = fixturedef.func
+    func: Callable[..., Awaitable[object]] = _func
     timeout = _find_async_timeout(func, node)
 
-    def override(extra, *args, **kwargs):
+    def override(extra: dict[str, object], *args: object, **kwargs: object) -> object:
         __tracebackhide__ = True
 
-        info = {"func": func}
+        info: RunInfo = {"cancelled": False, "func": func}
         loop = asyncio.get_event_loop_policy().get_event_loop()
         return _run_and_raise(
             ctx, loop, info, func, async_runner(func, timeout, info, args, kwargs)
         )
 
-    fixturedef.func = _wrap(fixturedef, [], override, func)
+    fixturedef.func = _wrap(fixturedef, [], override, func)  # type: ignore[misc]
 
 
-def convert_async_gen_fixture(ctx, fixturedef, request, node):
+def convert_async_gen_fixture(
+    ctx: contextvars.Context,
+    fixturedef: pytest.FixtureDef[object],
+    request: pytest.FixtureRequest,
+    node: pytest.Item,
+) -> None:
     """
     Return the yield'd value from the generator and ensure the generator is
     finished.
     """
-    generator = fixturedef.func
+    _generator: Any = fixturedef.func
+    generator: Callable[..., AsyncGenerator[object]] = _generator
 
-    def override(extra, *args, **kwargs):
+    class Extra(TypedDict):
+        request: pytest.FixtureRequest
+
+    def override(extra: Extra, *args: object, **kwargs: object) -> object:
         __tracebackhide__ = True
 
         request = extra["request"]
@@ -244,9 +315,9 @@ def convert_async_gen_fixture(ctx, fixturedef, request, node):
         timeout = _find_async_timeout(fixturedef.func, node)
         gen_obj = generator(*args, **kwargs)
 
-        info = {"gen_obj": gen_obj}
+        info: GenRunInfo = {"gen_obj": gen_obj, "cancelled": False}
 
-        def finalizer():
+        def finalizer() -> None:
             """Yield again, to finalize."""
             __tracebackhide__ = True
 
@@ -254,9 +325,9 @@ def convert_async_gen_fixture(ctx, fixturedef, request, node):
             if "ran_once" not in info:
                 return
 
-            info = {"gen_obj": gen_obj, "finalizer": True}
+            info = {"gen_obj": gen_obj, "finalizer": True, "cancelled": False}
 
-            async def async_finalizer():
+            async def async_finalizer() -> None:
                 __tracebackhide__ = True
 
                 await async_runner(gen_obj.__anext__, timeout, info, (), {})
@@ -278,10 +349,16 @@ def convert_async_gen_fixture(ctx, fixturedef, request, node):
             async_runner(gen_obj.__anext__, timeout, info, (), {}),
         )
 
-    fixturedef.func = _wrap(fixturedef, ["request"], override, generator)
+    fixturedef.func = _wrap(fixturedef, ["request"], override, generator)  # type: ignore[misc]
 
 
-async def async_runner(func, timeout, info, args, kwargs):
+async def async_runner(
+    func: Callable[P_Args, Awaitable[T_Ret]],
+    timeout: float,
+    info: RunInfo,
+    args: P_Args.args,
+    kwargs: P_Args.kwargs,
+) -> T_Ret | None:
     """
     Run our function until timeout has been reached, at which point we cancel
     this task. We record any exceptions in info so that calling code can extract
@@ -289,13 +366,10 @@ async def async_runner(func, timeout, info, args, kwargs):
     """
     info["cancelled"] = False
 
-    if hasattr(asyncio, "current_task"):
-        current_task = asyncio.current_task()
-    else:
-        current_task = asyncio.Task.current_task()
+    current_task = asyncio.current_task()
 
-    def timeout_task(task):
-        if not task.done():
+    def timeout_task(task: asyncio.Task[T_Ret] | None) -> None:
+        if task and not task.done():
             # If the debugger is active then don't cancel, so that debugging may continue
             # sys.gettrace is not a language feature and notguaranteed to be available
             # on all python implementations, so we see if it exists
@@ -310,8 +384,11 @@ async def async_runner(func, timeout, info, args, kwargs):
         return await func(*args, **kwargs)
     except:
         __tracebackhide__ = True
-        exc_info = sys.exc_info()
-        e = exc_info[1]
+        _, e, _ = sys.exc_info()
+        if TYPE_CHECKING:
+            assert e is not None
         info["e"] = e
     finally:
         info["ran_once"] = True
+
+    return None

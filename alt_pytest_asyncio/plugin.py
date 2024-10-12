@@ -1,9 +1,13 @@
 import asyncio
 import contextvars
+import dataclasses
 import inspect
 import sys
 from collections import defaultdict
+from collections.abc import Callable, Coroutine, Iterator
 from functools import partial, wraps
+from types import TracebackType
+from typing import TYPE_CHECKING, Self
 
 import pytest
 from _pytest._code.code import ExceptionInfo
@@ -12,9 +16,11 @@ from alt_pytest_asyncio.async_converters import convert_fixtures, converted_asyn
 
 
 class AltPytestAsyncioPlugin:
-    def __init__(self, loop=None):
+    def __init__(self, loop: asyncio.AbstractEventLoop | None = None) -> None:
         self.own_loop = False
-        self.test_tasks = defaultdict(list)
+        self.test_tasks: dict[asyncio.AbstractEventLoop, list[asyncio.Task[object]]] = defaultdict(
+            list
+        )
 
         if loop is None:
             self.own_loop = True
@@ -24,14 +30,14 @@ class AltPytestAsyncioPlugin:
         self.loop = loop
         self.ctx = contextvars.copy_context()
 
-    def pytest_configure(self, config):
+    def pytest_configure(self, config: pytest.Config) -> None:
         """Register our timeout marker which is used to signify async timeouts"""
         config.addinivalue_line(
             "markers", "async_timeout(length): mark async test to have a timeout"
         )
 
     @pytest.hookimpl(tryfirst=True, hookwrapper=True)
-    def pytest_sessionfinish(self, session, exitstatus):
+    def pytest_sessionfinish(self, session: pytest.Session, exitstatus: int) -> Iterator[None]:
         """
         Make sure all the test coroutines have been finalized once pytest has finished
 
@@ -58,19 +64,21 @@ class AltPytestAsyncioPlugin:
                     self.loop.close()
 
     @pytest.hookimpl(tryfirst=True, hookwrapper=True)
-    def pytest_fixture_setup(self, fixturedef, request):
+    def pytest_fixture_setup(
+        self, fixturedef: pytest.FixtureDef[object], request: pytest.FixtureRequest
+    ) -> Iterator[None]:
         """Convert async fixtures to sync fixtures"""
         convert_fixtures(self.ctx, fixturedef, request, request.node)
         yield
 
     @pytest.hookimpl(tryfirst=True, hookwrapper=True)
-    def pytest_pyfunc_call(self, pyfuncitem):
+    def pytest_pyfunc_call(self, pyfuncitem: pytest.Function) -> Iterator[None]:
         """Convert async tests to sync tests"""
         if inspect.iscoroutinefunction(pyfuncitem.obj):
-            timeout = pyfuncitem.get_closest_marker("async_timeout")
+            timeout_marker = pyfuncitem.get_closest_marker("async_timeout")
 
-            if timeout:
-                timeout = timeout.args[0]
+            if timeout_marker:
+                timeout = float(timeout_marker.args[0])
             else:
                 timeout = float(
                     pyfuncitem.config.getoption("default_async_timeout", None)
@@ -82,15 +90,20 @@ class AltPytestAsyncioPlugin:
                 partial(converted_async_test, self.ctx, self.test_tasks, o, timeout)
             )
         else:
-            original = pyfuncitem.obj
+            original: Callable[..., object] = pyfuncitem.obj
 
             @wraps(original)
-            def run_obj(*args, **kwargs):
+            def run_obj(*args: object, **kwargs: object) -> None:
                 try:
                     self.ctx.run(lambda: None)
-                    run = lambda func: self.ctx.run(func)
+
+                    def run(func: Callable[..., object]) -> object:
+                        return self.ctx.run(func)
+
                 except RuntimeError:
-                    run = lambda func: func()
+
+                    def run(func: Callable[..., object]) -> object:
+                        return func()
 
                 run(partial(original, *args, **kwargs))
 
@@ -99,11 +112,11 @@ class AltPytestAsyncioPlugin:
         yield
 
 
-def cancel_all_tasks(loop, ignore_errors_from_tasks=None):
-    if hasattr(asyncio.tasks, "all_tasks"):
-        to_cancel = asyncio.tasks.all_tasks(loop)
-    else:
-        to_cancel = asyncio.Task.all_tasks(loop)
+def cancel_all_tasks(
+    loop: asyncio.AbstractEventLoop,
+    ignore_errors_from_tasks: list[asyncio.Task[object]] | None = None,
+) -> None:
+    to_cancel = asyncio.tasks.all_tasks(loop)
 
     if not to_cancel:
         return
@@ -131,32 +144,49 @@ def cancel_all_tasks(loop, ignore_errors_from_tasks=None):
             )
 
 
-def run_coro_as_main(loop, coro):
+def run_coro_as_main(
+    loop: asyncio.AbstractEventLoop, coro: Coroutine[object, object, None]
+) -> None:
+    @dataclasses.dataclass(frozen=True, kw_only=True)
     class Captured(Exception):
-        def __init__(self, error):
-            self.error = error
+        error: BaseException
 
     try:
 
-        async def runner():
+        async def runner() -> None:
             __tracebackhide__ = True
 
             try:
                 await coro
             except:
-                exc_info = sys.exc_info()
-                exc_info[1].__traceback__ = exc_info[2]
-                raise Captured(exc_info[1])
+                exc_type, exc, tb = sys.exc_info()
+                if TYPE_CHECKING:
+                    assert exc_type is not None
+                    assert exc is not None
+                    assert tb is not None
+
+                exc.__traceback__ = tb
+                raise Captured(error=exc)
 
         task = loop.create_task(runner())
         loop.run_until_complete(task)
     except:
         exc_type, exc, tb = sys.exc_info()
-        if issubclass(exc_type, Captured):
+        if (
+            isinstance(exc_type, type)
+            and issubclass(exc_type, Captured)
+            and isinstance(exc, Captured)
+        ):
             exc = exc.error
             exc_type = type(exc)
             tb = exc.__traceback__
-        info = ExceptionInfo((exc_type, exc, tb), "")
+
+        if TYPE_CHECKING:
+            assert exc_type is not None
+            assert exc is not None
+            assert tb is not None
+
+        info = ExceptionInfo[BaseException]((exc_type, exc, tb), "")
         print(info.getrepr(style="short"))
         sys.exit(1)
     finally:
@@ -201,11 +231,13 @@ class OverrideLoop:
     all tasks to ensure finally blocks are run.
     """
 
-    def __init__(self, new_loop=True):
-        self.tasks = []
+    loop: asyncio.AbstractEventLoop | None
+
+    def __init__(self, new_loop: bool = True) -> None:
+        self.tasks: list[asyncio.Task[object]] = []
         self.new_loop = new_loop
 
-    def __enter__(self):
+    def __enter__(self) -> Self:
         self._original_loop = asyncio.get_event_loop_policy().get_event_loop()
 
         if self.new_loop:
@@ -216,9 +248,9 @@ class OverrideLoop:
         asyncio.set_event_loop(self.loop)
         return self
 
-    def __exit__(self, exc_typ, exc, tb):
+    def __exit__(self, exc_typ: type[Exception], exc: Exception, tb: TracebackType) -> None:
         try:
-            if getattr(self, "loop", None):
+            if self.loop is not None:
                 cancel_all_tasks(self.loop, ignore_errors_from_tasks=self.tasks)
                 self.loop.run_until_complete(self.shutdown_asyncgens())
                 self.loop.close()
@@ -226,16 +258,21 @@ class OverrideLoop:
             if hasattr(self, "_original_loop"):
                 asyncio.set_event_loop(self._original_loop)
 
-    async def shutdown_asyncgens(self):
+    async def shutdown_asyncgens(self) -> None:
         """
         A version of loop.shutdown_asyncgens that tries to cancel the generators
         before closing them.
         """
-        if not len(self.loop._asyncgens):
+        if self.loop is None:
             return
 
-        closing_agens = list(self.loop._asyncgens)
-        self.loop._asyncgens.clear()
+        asyncgens = getattr(self.loop, "_asyncgens", None)
+        assert asyncgens is not None
+        if not len(asyncgens):
+            return
+
+        closing_agens = list(asyncgens)
+        asyncgens.clear()
 
         # I would do an asyncio.tasks.gather but it would appear that just causes
         # the asyncio loop to think it's shutdown, so I have to do them one at a time
@@ -260,7 +297,7 @@ class OverrideLoop:
                     }
                 )
 
-    def run_until_complete(self, coro):
+    def run_until_complete(self, coro: Coroutine[object, object, None]) -> None:
         if not hasattr(self, "loop"):
             raise Exception(
                 "Cannot use run_until_complete on OverrideLoop outside of using it as a context manager"

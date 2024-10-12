@@ -6,7 +6,7 @@ from alt_pytest_asyncio.version import VERSION
 
 
 @pytest.hookimpl
-def pytest_addoption(parser):
+def pytest_addoption(parser: pytest.Parser) -> None:
     """Add an option for default async timeouts"""
     desc = "timeout in seconds before failing a test. This can be overriden with @pytest.mark.async_timeout(<my_timeout>)"
 
@@ -21,7 +21,7 @@ def pytest_addoption(parser):
     )
 
 
-def pytest_configure(config):
+def pytest_configure(config: pytest.Config) -> None:
     from alt_pytest_asyncio.plugin import AltPytestAsyncioPlugin
 
     if not any(isinstance(p, AltPytestAsyncioPlugin) for p in config.pluginmanager.get_plugins()):
