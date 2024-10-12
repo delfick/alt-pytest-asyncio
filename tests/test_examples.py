@@ -77,7 +77,7 @@ async def test_shows_correctly_for_failing_fixtures(name: str, pytester: pytest.
     with importlib.resources.as_file(examples) as examples_path:
         shutil.copytree(examples_path, pytester.path / name)
 
-    result = pytester.runpytest_subprocess("--tb", "short")
+    result = pytester.runpytest_subprocess("--tb", "short", "-p", "alt_pytest_asyncio.enable")
     assert not result.errlines
 
     lines: int | list[str] = 0
@@ -111,6 +111,8 @@ async def test_cleans_up_tests_properly_on_interrupt(pytester: pytest.Pytester) 
             sys.executable,
             "-m",
             "pytest",
+            "-p",
+            "alt_pytest_asyncio.enable",
             cwd=directory,
             stdout=subprocess.PIPE,
             stderr=subprocess.STDOUT,

@@ -1,1 +1,1 @@
-pytest_plugins = ["pytester"]
+pytest_plugins = ["pytester", "alt_pytest_asyncio.enable"]
