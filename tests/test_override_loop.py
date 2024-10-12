@@ -1,28 +1,33 @@
 import asyncio
+from collections.abc import AsyncGenerator, Coroutine, Iterator
 
 import pytest
 
 from alt_pytest_asyncio.plugin import OverrideLoop
 
 
-def get_event_loop():
+def get_event_loop() -> asyncio.AbstractEventLoop:
     return asyncio.get_event_loop_policy().get_event_loop()
 
 
 @pytest.fixture()
-def fut():
+def fut() -> asyncio.Future[None]:
     return get_event_loop().create_future()
 
 
-async def things(futs, loop_info, works=False):
-    found = []
+async def things(
+    futs: dict[str, asyncio.Future[None]],
+    loop_info: dict[str, asyncio.AbstractEventLoop],
+    works: bool = False,
+) -> None:
+    found: list[None] = []
 
-    async def setter():
+    async def setter() -> None:
         await asyncio.sleep(0.05)
         futs["a"].set_result(None)
         futs["b"].set_result(None)
 
-    task = None
+    task: asyncio.Task[None] | None = None
 
     try:
         task = get_event_loop().create_task(setter())
@@ -31,20 +36,24 @@ async def things(futs, loop_info, works=False):
             loop_info["thingsa"] = get_event_loop()
 
         if works:
-            found.append(await futs["a"])
+            await futs["a"]
+            found.append(None)
         else:
             try:
-                found.append(await futs["a"])
+                await futs["a"]
+                found.append(None)
             except RuntimeError as error:
                 assert "attached to a different loop" in str(error)
 
-        found.append(await futs["b"])
+        await futs["b"]
+        found.append(None)
     finally:
         if not works:
             loop_info["thingsb"] = get_event_loop()
 
-        task.cancel()
-        await asyncio.wait([task])
+        if task:
+            task.cancel()
+            await asyncio.wait([task])
 
         if works:
             assert found == [None, None]
@@ -52,10 +61,10 @@ async def things(futs, loop_info, works=False):
             assert found == [None]
 
 
-def test_will_not_let_you_do_run_until_complete_outside_the_context_manager():
-    info = {"coro": None}
+def test_will_not_let_you_do_run_until_complete_outside_the_context_manager() -> None:
+    info: dict[str, Coroutine[None, None, None] | None] = {"coro": None}
 
-    async def blah():
+    async def blah() -> None:
         pass
 
     try:
@@ -70,7 +79,7 @@ def test_will_not_let_you_do_run_until_complete_outside_the_context_manager():
     get_event_loop().run_until_complete(info["coro"])
 
 
-def test_can_replace_the_loop(fut):
+def test_can_replace_the_loop(fut: asyncio.Future[None]) -> None:
     info = {}
     futs = {"a": fut}
 
@@ -96,13 +105,13 @@ def test_can_replace_the_loop(fut):
 
 
 @pytest.fixture()
-def loop_info():
+def loop_info() -> dict[str, asyncio.AbstractEventLoop]:
     return {}
 
 
 class TestNoNewLoop:
-    def test_sets_None(self):
-        info = {"coro": None}
+    def test_sets_None(self) -> None:
+        info: dict[str, Coroutine[None, None, None] | None] = {"coro": None}
 
         original = get_event_loop()
 
@@ -116,7 +125,7 @@ class TestNoNewLoop:
 
             try:
 
-                async def blah():
+                async def blah() -> None:
                     pass
 
                 coro = info["coro"] = blah()
@@ -130,14 +139,15 @@ class TestNoNewLoop:
         assert get_event_loop() is original
         assert not original.is_closed()
 
-        assert info["coro"] is not None
-        get_event_loop().run_until_complete(info["coro"])
+        made_coro = info["coro"]
+        assert made_coro is not None
+        get_event_loop().run_until_complete(made_coro)
 
 
-def test_can_shutdown_async_gens():
-    info1 = []
-    info2 = []
-    info3 = []
+def test_can_shutdown_async_gens() -> None:
+    info1: list[int | str | tuple[str, object]] = []
+    info2: list[int | str | tuple[str, object]] = []
+    info3: list[int | str | tuple[str, object]] = []
 
     try:
         original = asyncio.get_running_loop()
@@ -145,7 +155,7 @@ def test_can_shutdown_async_gens():
         original = asyncio.new_event_loop()
         asyncio.set_event_loop(original)
 
-    async def my_generator(info):
+    async def my_generator(info: list[int | str | tuple[str, object]]) -> AsyncGenerator[None]:
         try:
             info.append(1)
             yield
@@ -161,7 +171,7 @@ def test_can_shutdown_async_gens():
     # Test that the outside loop isn't affected by the inside loop
     outside_gen = my_generator(info1)
 
-    async def outside1():
+    async def outside1() -> None:
         await outside_gen.__anext__()
         await outside_gen.__anext__()
 
@@ -178,13 +188,13 @@ def test_can_shutdown_async_gens():
         assert info2 == []
         assert info3 == []
 
-        async def doit():
+        async def doit() -> None:
             ag2 = my_generator(info3)
-            assert set(asyncio.get_event_loop()._asyncgens) == set()
+            assert set(asyncio.get_event_loop()._asyncgens) == set()  # type: ignore[attr-defined]
             await ag2.__anext__()
-            assert set(asyncio.get_event_loop()._asyncgens) == set([ag2])
+            assert set(asyncio.get_event_loop()._asyncgens) == set([ag2])  # type: ignore[attr-defined]
             await ag.__anext__()
-            assert set(asyncio.get_event_loop()._asyncgens) == set([ag2, ag])
+            assert set(asyncio.get_event_loop()._asyncgens) == set([ag2, ag])  # type: ignore[attr-defined]
             await ag.__anext__()
             assert info3 == [1]
 
@@ -199,7 +209,7 @@ def test_can_shutdown_async_gens():
     assert info2 == [1, 2, "cancelled", ("done", asyncio.CancelledError)]
     assert info1 == [1, 2]
 
-    async def outside2():
+    async def outside2() -> None:
         try:
             await outside_gen.__anext__()
         except StopAsyncIteration:
@@ -212,7 +222,9 @@ def test_can_shutdown_async_gens():
 
 class TestTestingAutoUse:
     @pytest.fixture(autouse=True)
-    def custom_loop(self, loop_info):
+    def custom_loop(
+        self, loop_info: dict[str, asyncio.AbstractEventLoop]
+    ) -> Iterator[asyncio.AbstractEventLoop]:
         assert not loop_info
         loop_info["original"] = get_event_loop()
 
@@ -235,7 +247,9 @@ class TestTestingAutoUse:
         ]
         self.assertLoopInfo(loop_info, closed=True)
 
-    def assertLoopInfo(self, loop_info, *, closed):
+    def assertLoopInfo(
+        self, loop_info: dict[str, asyncio.AbstractEventLoop], *, closed: bool
+    ) -> None:
         original = loop_info["original"]
         rest = [l for k, l in loop_info.items() if k != "original"]
 
@@ -249,15 +263,19 @@ class TestTestingAutoUse:
         assert len(set([*rest, original])) == 2
 
     @pytest.fixture(autouse=True)
-    async def fix1(self, custom_loop, loop_info):
+    async def fix1(
+        self,
+        custom_loop: asyncio.AbstractEventLoop,
+        loop_info: dict[str, asyncio.AbstractEventLoop],
+    ) -> None:
         loop_info["fix1"] = get_event_loop()
 
     @pytest.fixture()
-    async def fix2(self, loop_info):
+    async def fix2(self, loop_info: dict[str, asyncio.AbstractEventLoop]) -> None:
         loop_info["fix2"] = get_event_loop()
 
     @pytest.fixture()
-    async def fix3(self, loop_info):
+    async def fix3(self, loop_info: dict[str, asyncio.AbstractEventLoop]) -> AsyncGenerator[None]:
         loop_info["fix3a"] = get_event_loop()
         try:
             yield
@@ -266,7 +284,7 @@ class TestTestingAutoUse:
             loop_info["fix3c"] = get_event_loop()
 
     @pytest.fixture()
-    def fix4(self, loop_info):
+    def fix4(self, loop_info: dict[str, asyncio.AbstractEventLoop]) -> Iterator[None]:
         loop_info["fix4a"] = get_event_loop()
         try:
             yield
@@ -275,25 +293,48 @@ class TestTestingAutoUse:
             loop_info["fix4c"] = get_event_loop()
 
     @pytest.fixture()
-    def fix5(self, loop_info):
+    def fix5(self, loop_info: dict[str, asyncio.AbstractEventLoop]) -> None:
         loop_info["fix5a"] = get_event_loop()
 
-    def test_works(self, fix1, fix2, fix3, fix4, fix5, loop_info):
+    def test_works(
+        self,
+        fix1: None,
+        fix2: None,
+        fix3: None,
+        fix4: None,
+        fix5: None,
+        loop_info: dict[str, asyncio.AbstractEventLoop],
+    ) -> None:
         loop_info["test"] = get_event_loop()
         assert list(loop_info) == ["original", "fix1", "fix2", "fix3a", "fix4a", "fix5a", "test"]
         self.assertLoopInfo(loop_info, closed=False)
 
     def test_has_the_loop_on_custom_loop(
-        self, custom_loop, fix1, fix2, fix3, fix4, fix5, loop_info
-    ):
+        self,
+        custom_loop: asyncio.AbstractEventLoop,
+        fix1: None,
+        fix2: None,
+        fix3: None,
+        fix4: None,
+        fix5: None,
+        loop_info: dict[str, asyncio.AbstractEventLoop],
+    ) -> None:
         loop_info["test"] = get_event_loop()
         assert list(loop_info) == ["original", "fix1", "fix2", "fix3a", "fix4a", "fix5a", "test"]
-        assert custom_loop.loop is get_event_loop()
+        assert custom_loop.loop is get_event_loop()  # type: ignore[attr-defined]
         self.assertLoopInfo(loop_info, closed=False)
 
     def test_can_use_futures_from_fixtures(
-        self, custom_loop, fix1, fix2, fix3, fix4, fix5, loop_info, fut
-    ):
+        self,
+        custom_loop: asyncio.AbstractEventLoop,
+        fix1: None,
+        fix2: None,
+        fix3: None,
+        fix4: None,
+        fix5: None,
+        loop_info: dict[str, asyncio.AbstractEventLoop],
+        fut: asyncio.Future[None],
+    ) -> None:
         loop_info["test"] = get_event_loop()
 
         futs = {"a": fut, "b": get_event_loop().create_future()}

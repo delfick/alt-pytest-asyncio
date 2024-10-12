@@ -1,4 +1,5 @@
 import asyncio
+from collections.abc import AsyncGenerator
 
 import pytest
 
@@ -6,7 +7,7 @@ pytestmark = pytest.mark.async_timeout(0.01)
 
 
 @pytest.fixture()
-async def fixture_timeout_in_finally():
+async def fixture_timeout_in_finally() -> AsyncGenerator[int]:
     try:
         yield 1
     finally:
@@ -14,25 +15,25 @@ async def fixture_timeout_in_finally():
 
 
 @pytest.fixture()
-async def fixture_timeout_in_setup():
+async def fixture_timeout_in_setup() -> AsyncGenerator[int]:
     await asyncio.sleep(1)
     yield 1
 
 
 @pytest.fixture()
-async def fixture_timeout():
+async def fixture_timeout() -> int:
     await asyncio.sleep(1)
     return 1
 
 
 @pytest.fixture(scope="module")
-async def fixture_timeout_in_setup_module():
+async def fixture_timeout_in_setup_module() -> AsyncGenerator[int]:
     await asyncio.sleep(1)
     yield 1
 
 
 @pytest.fixture(scope="module", autouse=True)
-async def fixture_timeout_in_teardown_module():
+async def fixture_timeout_in_teardown_module() -> AsyncGenerator[int]:
     try:
         yield 1
     finally:
@@ -40,34 +41,34 @@ async def fixture_timeout_in_teardown_module():
 
 
 @pytest.fixture(scope="module")
-async def fixture_timeout_module():
+async def fixture_timeout_module() -> int:
     await asyncio.sleep(1)
     return 1
 
 
-def test_one(fixture_timeout_in_finally):
+def test_one(fixture_timeout_in_finally: int) -> None:
     pass
 
 
-def test_two(fixture_timeout_in_setup):
+def test_two(fixture_timeout_in_setup: int) -> None:
     pass
 
 
-def test_three(fixture_timeout):
+def test_three(fixture_timeout: int) -> None:
     pass
 
 
-def test_four(fixture_timeout_in_setup_module):
+def test_four(fixture_timeout_in_setup_module: int) -> None:
     pass
 
 
-def test_five(fixture_timeout_module):
+def test_five(fixture_timeout_module: int) -> None:
     pass
 
 
-def test_six(fixture_timeout_in_setup_session):
+def test_six(fixture_timeout_in_setup_session: int) -> None:
     pass
 
 
-def test_seven(fixture_timeout_session):
+def test_seven(fixture_timeout_session: int) -> None:
     pass

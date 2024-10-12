@@ -1,26 +1,26 @@
 =======* ERRORS =====*
 _______* ERROR at setup of test_fails_on_fixture_returns _____*
-*test_fails.py:14: in fixture_returns
+*test_fails.py:17: in fixture_returns
     await one*()
-*test_fails.py:5: in one
-    return await two*()
-*test_fails.py:9: in two
+*test_fails.py:8: in one
+    await two*()
+*test_fails.py:12: in two
     raise ValueError*("WAT")
 E   ValueError: WAT
 _______* ERROR at setup of test_fails_on_fixture_yields _____*
-*test_fails.py:19: in fixture_yields
+*test_fails.py:22: in fixture_yields
     yield await one*()
-*test_fails.py:5: in one
-    return await two*()
-*test_fails.py:9: in two
+*test_fails.py:8: in one
+    await two*()
+*test_fails.py:12: in two
     raise ValueError*("WAT")
 E   ValueError: WAT
 _______* ERROR at teardown of test_fails_on_fixture_fails_in_finally _____*
-*test_fails.py:27: in fixture_fails_in_finally
+*test_fails.py:30: in fixture_fails_in_finally
     await one*()
-*test_fails.py:5: in one
-    return await two*()
-*test_fails.py:9: in two
+*test_fails.py:8: in one
+    await two*()
+*test_fails.py:12: in two
     raise ValueError*("WAT")
 E   ValueError: WAT
 =======* 1 passed, 3 error* in * ===*
