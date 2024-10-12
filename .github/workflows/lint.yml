@@ -29,6 +29,22 @@ jobs:
       - name: Ensure linter is happy
         run: ./tools/ci lint
 
+  types:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: "3.12"
+
+      - name: Install venv
+        run: ./tools/uv sync --extra tools --locked
+
+      - name: Ensure mypy is happy
+        run: ./tools/ci types
+
   format:
     runs-on: ubuntu-latest
     steps:

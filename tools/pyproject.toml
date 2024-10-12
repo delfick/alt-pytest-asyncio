@@ -3,6 +3,7 @@ name = "tools"
 version = "0.1"
 dependencies = [
     "tox==4.15.1",
+    "mypy==1.11.2",
     "click>=8.1.7",
     "ruff==0.5.0",
     "remote-pdb==2.1.0"
