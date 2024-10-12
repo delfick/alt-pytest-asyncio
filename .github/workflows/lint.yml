@@ -23,14 +23,11 @@ jobs:
         with:
           python-version: "3.12"
 
-      - name: Install deps
-        shell: bash
-        env:
-          VENVSTARTER_ONLY_MAKE_VENV: "1"
-        run: python ./tools/venv
+      - name: Install venv
+        run: ./tools/uv sync --extra tools --locked
 
       - name: Ensure linter is happy
-        run: ./lint
+        run: ./tools/ci lint
 
   format:
     runs-on: ubuntu-latest
@@ -42,15 +39,14 @@ jobs:
         with:
           python-version: "3.12"
 
-      - name: Install deps
-        shell: bash
-        env:
-          VENVSTARTER_ONLY_MAKE_VENV: "1"
-        run: python ./tools/venv
+      - name: Install venv
+        run: ./tools/uv sync --extra tools --locked
 
       - name: Ensure code is formatted
         run: |
-          ./format
+          ./tools/ci format
+
+          git status --porcelain
 
           # Complain if there were changes
           if [[ ! -z "$(git status --porcelain)" ]]; then

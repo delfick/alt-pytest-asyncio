@@ -82,7 +82,6 @@ class AltPytestAsyncioPlugin:
                 partial(converted_async_test, self.ctx, self.test_tasks, o, timeout)
             )
         else:
-
             original = pyfuncitem.obj
 
             @wraps(original)
@@ -158,7 +157,7 @@ def run_coro_as_main(loop, coro):
             exc_type = type(exc)
             tb = exc.__traceback__
         info = ExceptionInfo((exc_type, exc, tb), "")
-        print(info.getrepr(style="short"))
+        print(info.getrepr(style="short"))  # noqa: T201
         sys.exit(1)
     finally:
         cancel_all_tasks(loop, ignore_errors_from_tasks=[task])

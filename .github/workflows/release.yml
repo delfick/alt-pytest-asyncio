@@ -3,6 +3,9 @@ on:
 
 name: Release Packages
 
+permissions:
+  contents: write
+
 jobs:
   build:
     name: Create the package
@@ -16,7 +19,7 @@ jobs:
           python-version: "3.12"
 
       - id: build
-        run: pip install hatch==1.6.3 && hatch build
+        run: uv build
 
       - id: version
         run: |
@@ -27,12 +30,11 @@ jobs:
           echo "versiondash=$versiondash" >> $GITHUB_OUTPUT
 
       - id: create-release
-        uses: softprops/action-gh-release@v1
+        uses: softprops/action-gh-release@v2
         with:
           name: alt_pytest_asyncio ${{ steps.version.outputs.version }}
           body: "https://github.com/delfick/python-alt_pytest_asyncio#release-${{ steps.version.outputs.versiondash }}"
           tag_name: "release-${{ steps.version.outputs.version }}"
-          token: ${{ secrets.GITHUB_TOKEN }}
           fail_on_unmatched_files: true
           draft: false
           prerelease: false

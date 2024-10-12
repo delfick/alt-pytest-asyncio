@@ -30,13 +30,9 @@ jobs:
       - name: Display Python version
         run: python -c "import sys; print(sys.version)"
 
-      - name: Install deps
-        shell: bash
-        env:
-          VENVSTARTER_ONLY_MAKE_VENV: "1"
-        run: |
-          python ./tools/venv
+      - name: Install venv
+        run: ./tools/uv sync --extra tools --locked
 
       - name: Run tests
         shell: bash
-        run: ./test.sh -v
+        run: ./tools/ci tests -v

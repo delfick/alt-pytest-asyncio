@@ -1,15 +1,16 @@
 #!/bin/bash
 
+set -e
+
 # Helper for searching code base without searching through external code
 
-DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
+cd "$(git rev-parse --show-toplevel)"
 
-(
-    cd $DIR
-    exec ack "$@" \
-        --ignore-directory .tox \
-        --ignore-directory .mypy_cache \
-        --ignore-directory dist \
-        --ignore-directory build \
-        --ignore-directory tools \
-)
+exec ack "$@" \
+    --ignore-directory .tox \
+    --ignore-directory .mypy_cache \
+    --ignore-directory .dmypy.json \
+    --ignore-directory dist \
+    --ignore-directory build \
+    --ignore-directory "*.egg-info" \
+    --ignore-directory tools

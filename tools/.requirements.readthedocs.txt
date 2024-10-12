@@ -1,0 +1,6 @@
+mypy==1.11.2
+django-stubs==5.0.2
+sphinx-autobuild==2024.9.19
+sphinx-rtd-theme==3.0.0rc1
+sphinx-toolbox==3.8.0
+sphinx==8.0.2

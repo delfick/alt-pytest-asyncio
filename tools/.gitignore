@@ -1,4 +1,2 @@
-deps
-.pylama
-.black
-.python
+requirements.local.txt
+.bootstrap-venv

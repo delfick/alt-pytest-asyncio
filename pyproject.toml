@@ -20,45 +20,58 @@ dependencies = [
     "pytest >= 8.0.0",
 ]
 
-[project.optional-dependencies]
-tests = [
-    "nest-asyncio==1.6.0",
-    "noseOfYeti[black]==2.4.9",
-    "pytest==8.2.1",
-    "pytest-order==1.2.1"
-]
-
 [project.entry-points.pytest11]
 alt_pytest_asyncio = "alt_pytest_asyncio"
 
 [project.urls]
 Homepage = "https://github.com/delfick/alt-pytest-asyncio"
 
+[tool.uv]
+dev-dependencies = [
+    "tools",
+    "alt_pytest_asyncio_test_driver",
+]
+
+[tool.hatch.metadata]
+allow-direct-references = true
+
 [tool.hatch.version]
 path = "alt_pytest_asyncio/version.py"
+
+[tool.hatch.build.targets.wheel]
+include = [
+    "/alt_pytest_asyncio",
+]
 
 [tool.hatch.build.targets.sdist]
 include = [
     "/alt_pytest_asyncio",
 ]
 
-[tool.black]
-line-length = 100
-include = '\.py$'
-exclude = '''
-/(
-     \.git
-   | \.tox
-   | dist
-   | tools/\.python
-)/
-'''
+[tool.uv.sources]
+tools = { workspace = true }
+alt_pytest_asyncio_test_driver = { workspace = true }
 
-[tool.isort]
-profile = "black"
-skip_glob = [
-   ".git/*",
-   ".tox/*",
-   "dist/*",
-   "tools/.*",
+[tool.uv.workspace]
+members = ["tools", "helpers"]
+
+[tool.ruff]
+target-version = "py311"
+line-length = 99
+extend-exclude = [
+    ".DS_Store",
+    "tools/.bootstrap-venv",
+    "tests",
+    "__pycache__",
+]
+
+[tool.ruff.lint]
+select = [
+    "B008",  # mutable objects as function argument defaults
+    "B015",  # flake8-bugbear (useless-comparison)
+    "I",  # isort
+    "T20",  # flake8-print
+    "UP",  # pyupgrade
+    "RUF",
+    "F",
 ]
