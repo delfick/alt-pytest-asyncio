@@ -6,8 +6,7 @@ THING FINALLY
 
 =======* FAILURES ====*
 _______* test_bb_shows_failed_tests ____*
-tests/test_example.py*: in test_bb_shows_failed_tests
-    assert False, "NOOOOO"
+*tests/test_example.py*: in test_bb_shows_failed_tests
 E   AssertionError: NOOOOO
 _______* test_cc_shows_timedout_tests ____*
 */async_converters.py*: in raise_error

@@ -19,4 +19,4 @@ for letter in string.ascii_letters:
     locals()[letter] = var
     allvars[letter] = var
 
-__all__ = ["allvars", "Empty", "assertVarsEmpty"] + sorted(allvars)
+__all__ = ["allvars", "Empty", "assertVarsEmpty", *allvars]

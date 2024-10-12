@@ -1,6 +1,8 @@
 # coding: spec
 
+from alt_pytest_asyncio_test_driver import available_examples
 import asyncio
+import importlib.resources
 import os
 import shutil
 import signal
@@ -11,8 +13,6 @@ import tempfile
 from contextlib import contextmanager
 
 import pytest
-
-this_dir = os.path.dirname(__file__)
 
 
 @contextmanager
@@ -34,18 +34,14 @@ def listening():
 
 
 def example_dir_factory(tmp_path_factory, name):
-    path = os.path.join(this_dir, name)
-    assert os.path.isdir(path)
+    examples = importlib.resources.files("alt_pytest_asyncio_test_driver") / "examples" / name
+    assert examples.is_dir()
 
-    expected_file = os.path.join(this_dir, name, "expected")
-    assert os.path.isfile(expected_file)
-
-    with open(expected_file, "r") as fle:
-        expected = fle.read().strip()
+    expected = (examples / "expected").read_text()
 
     directory = tmp_path_factory.mktemp(name)
     shutil.rmtree(directory)
-    shutil.copytree(path, directory)
+    shutil.copytree(examples, directory)
 
     class Factory:
         @property
@@ -63,9 +59,7 @@ def example_dir_factory(tmp_path_factory, name):
     return Factory()
 
 
-@pytest.mark.parametrize(
-    "name", [name for name in os.listdir(this_dir) if name.startswith("example_")]
-)
+@pytest.mark.parametrize("name", available_examples)
 async it "shows correctly for failing fixtures", name, request, tmp_path_factory, monkeypatch:
     factory = example_dir_factory(tmp_path_factory, name)
     testdir = pytest.Pytester(request, factory, monkeypatch)
@@ -85,25 +79,21 @@ async it "shows correctly for failing fixtures", name, request, tmp_path_factory
             lines.append(line)
 
     matcher = pytest.LineMatcher(lines)
-    matcher.fnmatch_lines(expected.split("\n"))
+    matcher.fnmatch_lines(expected.strip().split("\n"))
 
 
 @pytest.mark.async_timeout(7)
 @pytest.mark.skipif(os.name == "nt", reason="Can't use async subprocess on windows")
 async it "cleans up tests properly on interrupt":
-    directory = os.path.join(this_dir, "interrupt_test")
-    expected_file = os.path.join(directory, "expected")
-
-    assert os.path.isfile(expected_file)
-
-    with open(expected_file, "r") as fle:
-        expected = fle.read().strip()
+    examples = importlib.resources.files("alt_pytest_asyncio_test_driver") / "examples" / "interrupt_test"
+    assert examples.is_dir()
+    expected = (examples / "expected").read_text()
 
     p = await asyncio.create_subprocess_exec(
         sys.executable,
         "-m",
         "pytest",
-        cwd=directory,
+        cwd=examples,
         stdout=subprocess.PIPE,
         stderr=subprocess.STDOUT,
     )
