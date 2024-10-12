@@ -199,7 +199,7 @@ def test_can_shutdown_async_gens() -> None:
             assert info3 == [1]
 
         custom_loop.run_until_complete(doit())
-        assert list(custom_loop.loop._asyncgens) == [ag]
+        assert list(custom_loop.loop._asyncgens) == [ag]  # type: ignore[attr-defined]
         assert info3 == [1]
         assert info2 == [1, 2]
 
@@ -224,7 +224,7 @@ class TestTestingAutoUse:
     @pytest.fixture(autouse=True)
     def custom_loop(
         self, loop_info: dict[str, asyncio.AbstractEventLoop]
-    ) -> Iterator[asyncio.AbstractEventLoop]:
+    ) -> Iterator[OverrideLoop]:
         assert not loop_info
         loop_info["original"] = get_event_loop()
 
@@ -265,7 +265,7 @@ class TestTestingAutoUse:
     @pytest.fixture(autouse=True)
     async def fix1(
         self,
-        custom_loop: asyncio.AbstractEventLoop,
+        custom_loop: OverrideLoop,
         loop_info: dict[str, asyncio.AbstractEventLoop],
     ) -> None:
         loop_info["fix1"] = get_event_loop()
@@ -311,7 +311,7 @@ class TestTestingAutoUse:
 
     def test_has_the_loop_on_custom_loop(
         self,
-        custom_loop: asyncio.AbstractEventLoop,
+        custom_loop: OverrideLoop,
         fix1: None,
         fix2: None,
         fix3: None,
@@ -321,12 +321,12 @@ class TestTestingAutoUse:
     ) -> None:
         loop_info["test"] = get_event_loop()
         assert list(loop_info) == ["original", "fix1", "fix2", "fix3a", "fix4a", "fix5a", "test"]
-        assert custom_loop.loop is get_event_loop()  # type: ignore[attr-defined]
+        assert custom_loop.loop is get_event_loop()
         self.assertLoopInfo(loop_info, closed=False)
 
     def test_can_use_futures_from_fixtures(
         self,
-        custom_loop: asyncio.AbstractEventLoop,
+        custom_loop: OverrideLoop,
         fix1: None,
         fix2: None,
         fix3: None,
