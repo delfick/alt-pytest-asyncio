@@ -1,15 +1,11 @@
 import asyncio
 import contextlib
-import contextvars
-import inspect
-from collections import defaultdict
-from collections.abc import Callable, Iterator
-from functools import partial, wraps
+from collections.abc import Iterator
 from types import TracebackType
 
 import pytest
 
-from . import async_converters, errors, loop_manager
+from . import converter, errors, loop_manager
 
 
 @pytest.hookimpl
@@ -67,10 +63,7 @@ class _ManagedLoop(contextlib.AbstractContextManager[None]):
 class AltPytestAsyncioPlugin:
     def __init__(self, *, managed_loop: asyncio.AbstractEventLoop | None = None) -> None:
         self._managed_loop = managed_loop
-        self._test_tasks: dict[asyncio.AbstractEventLoop, list[asyncio.Task[object]]] = (
-            defaultdict(list)
-        )
-        self._ctx = contextvars.copy_context()
+        self._converter = converter.Converter()
 
     def pytest_configure(self, config: pytest.Config) -> None:
         """Register our timeout marker which is used to signify async timeouts"""
@@ -99,15 +92,7 @@ class AltPytestAsyncioPlugin:
         This is so if pytest is interrupted, we still execute the finally blocks of all the tests
         """
         try:
-            for loop, tasks in self._test_tasks.items():
-                ts = []
-                for t in tasks:
-                    if not t.done():
-                        t.cancel()
-                        ts.append(t)
-
-                if ts:
-                    loop.run_until_complete(asyncio.tasks.gather(*ts, return_exceptions=True))
+            self._converter.sessionfinish()
             yield
         finally:
             if _cm := getattr(self, "_cm", None):
@@ -118,47 +103,11 @@ class AltPytestAsyncioPlugin:
         self, fixturedef: pytest.FixtureDef[object], request: pytest.FixtureRequest
     ) -> Iterator[None]:
         """Convert async fixtures to sync fixtures"""
-        async_converters.convert_fixtures(self._ctx, fixturedef, request, request.node)
+        self._converter.convert_fixturedef(fixturedef, request)
         yield
 
     @pytest.hookimpl(tryfirst=True, hookwrapper=True)
     def pytest_pyfunc_call(self, pyfuncitem: pytest.Function) -> Iterator[None]:
         """Convert async tests to sync tests"""
-        if inspect.iscoroutinefunction(pyfuncitem.obj):
-            timeout_marker = pyfuncitem.get_closest_marker("async_timeout")
-
-            if timeout_marker:
-                timeout = float(timeout_marker.args[0])
-            else:
-                timeout = float(
-                    pyfuncitem.config.getoption("default_async_timeout", None)
-                    or pyfuncitem.config.getini("default_async_timeout")
-                )
-
-            o = pyfuncitem.obj
-            pyfuncitem.obj = wraps(o)(
-                partial(
-                    async_converters.converted_async_test, self._ctx, self._test_tasks, o, timeout
-                )
-            )
-        else:
-            original: Callable[..., object] = pyfuncitem.obj
-
-            @wraps(original)
-            def run_obj(*args: object, **kwargs: object) -> None:
-                try:
-                    self._ctx.run(lambda: None)
-
-                    def run(func: Callable[..., object]) -> object:
-                        return self._ctx.run(func)
-
-                except RuntimeError:
-
-                    def run(func: Callable[..., object]) -> object:
-                        return func()
-
-                run(partial(original, *args, **kwargs))
-
-            pyfuncitem.obj = run_obj
-
+        self._converter.convert_pyfunc(pyfuncitem)
         yield
