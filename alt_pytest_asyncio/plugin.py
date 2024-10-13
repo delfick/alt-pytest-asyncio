@@ -152,7 +152,9 @@ class LoadedAsyncTimeout(base.AsyncTimeout):
 
         def raise_error() -> None:
             if self.cancelled:
-                assert False, f"Took too long to complete: {fle}:{lineno} (timeout={self.timeout})"
+                raise AssertionError(
+                    f"Took too long to complete: {fle}:{lineno} (timeout={self.timeout})"
+                )
             if self.error:
                 raise self.error
 

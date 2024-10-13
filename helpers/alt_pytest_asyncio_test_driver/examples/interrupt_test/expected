@@ -10,7 +10,6 @@ _______* test_bb_shows_failed_tests ____*
 E   AssertionError: NOOOOO
 _______* test_cc_shows_timedout_tests ____*
 */plugin.py*: in raise_error
-    assert False, f"Took too long to complete: {fle}:{lineno}*
 E   AssertionError: Took too long to complete: */test_example.py:* (timeout=1)
 =======* short test summary info ====*
 FAILED tests/test_example.py::test_bb_shows_failed_tests - AssertionError: NO*
