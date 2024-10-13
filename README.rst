@@ -3,7 +3,7 @@ Alternative Pytest Asyncio
 
 This plugin allows you to have async pytest fixtures and tests.
 
-This plugin only supports python 3.6 and above.
+This plugin only supports python 3.11 and above.
 
 The code here is influenced by pytest-asyncio but with some differences:
 
