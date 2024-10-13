@@ -1,92 +1,92 @@
 =======* ERRORS =====*
 _______* ERROR at teardown of test_one ____*
-*/async_converters.py:*: in raise_error
-    assert False, f"Took too long to complete: {fle}:{lineno}"
-E   AssertionError: Took too long to complete: */example_timeouts*/test_fails.py:7
+*/plugin.py:*: in raise_error
+    assert False, f"Took too long to complete: {fle}:{lineno}*
+E   AssertionError: Took too long to complete: */example_timeouts*/test_fails.py:11 (timeout=0.01)
 _______* ERROR at setup of test_two ____*
-*/async_converters.py:*: in raise_error
-    assert False, f"Took too long to complete: {fle}:{lineno}"
-E   AssertionError: Took too long to complete: */example_timeouts*/test_fails.py:16
+*/plugin.py:*: in raise_error
+    assert False, f"Took too long to complete: {fle}:{lineno}*
+E   AssertionError: Took too long to complete: */example_timeouts*/test_fails.py:21 (timeout=0.01)
 _______* ERROR at setup of test_three ____*
-*/async_converters.py:*: in raise_error
-    assert False, f"Took too long to complete: {fle}:{lineno}"
-E   AssertionError: Took too long to complete: */example_timeouts*/test_fails.py:23
+*/plugin.py:*: in raise_error
+    assert False, f"Took too long to complete: {fle}:{lineno}*
+E   AssertionError: Took too long to complete: */example_timeouts*/test_fails.py:28 (timeout=0.01)
 _______* ERROR at setup of test_four ____*
-*/async_converters.py:*: in raise_error
-    assert False, f"Took too long to complete: {fle}:{lineno}"
-E   AssertionError: Took too long to complete: */example_timeouts*/test_fails.py:30
+*/plugin.py:*: in raise_error
+    assert False, f"Took too long to complete: {fle}:{lineno}*
+E   AssertionError: Took too long to complete: */example_timeouts*/test_fails.py:35 (timeout=0.01)
 _______* ERROR at setup of test_five ____*
-*/async_converters.py:*: in raise_error
-    assert False, f"Took too long to complete: {fle}:{lineno}"
-E   AssertionError: Took too long to complete: */example_timeouts*/test_fails.py:46
+*/plugin.py:*: in raise_error
+    assert False, f"Took too long to complete: {fle}:{lineno}*
+E   AssertionError: Took too long to complete: */example_timeouts*/test_fails.py:51 (timeout=0.01)
 _______* ERROR at setup of test_six ____*
-*/async_converters.py:*: in raise_error
-    assert False, f"Took too long to complete: {fle}:{lineno}"
-E   AssertionError: Took too long to complete: */example_timeouts*/conftest.py:7
+*/plugin.py:*: in raise_error
+    assert False, f"Took too long to complete: {fle}:{lineno}*
+E   AssertionError: Took too long to complete: */example_timeouts*/conftest.py:11 (timeout=0.01)
 _______* ERROR at setup of test_seven ____*
-*/async_converters.py:*: in raise_error
-    assert False, f"Took too long to complete: {fle}:{lineno}"
-E   AssertionError: Took too long to complete: */example_timeouts*/conftest.py:14
+*/plugin.py:*: in raise_error
+    assert False, f"Took too long to complete: {fle}:{lineno}*
+E   AssertionError: Took too long to complete: */example_timeouts*/conftest.py:18 (timeout=0.01)
 _______* ERROR at teardown of test_seven ____*
-*/async_converters.py:* in raise_error
-    assert False, f"Took too long to complete: {fle}:{lineno}"
-E   AssertionError: Took too long to complete: */test_fails.py:37
+*/plugin.py:* in raise_error
+    assert False, f"Took too long to complete: {fle}:{lineno}*
+E   AssertionError: Took too long to complete: */test_fails.py:42 (timeout=0.01)
 _______* ERROR at setup of TestAClass.test_2one ____*
-*/async_converters.py:*: in raise_error
-    assert False, f"Took too long to complete: {fle}:{lineno}"
-E   AssertionError: Took too long to complete: */example_timeouts*/test_fails_method_fixtures.py:8
+*/plugin.py:*: in raise_error
+    assert False, f"Took too long to complete: {fle}:{lineno}*
+E   AssertionError: Took too long to complete: */example_timeouts*/test_fails_method_fixtures.py:12 (timeout=0.01)
 _______* ERROR at setup of TestAClass.test_2two ____*
-*/async_converters.py:*: in raise_error
-    assert False, f"Took too long to complete: {fle}:{lineno}"
-E   AssertionError: Took too long to complete: */example_timeouts*/test_fails_method_fixtures.py:14
+*/plugin.py:*: in raise_error
+    assert False, f"Took too long to complete: {fle}:{lineno}*
+E   AssertionError: Took too long to complete: */example_timeouts*/test_fails_method_fixtures.py:18 (timeout=0.01)
 _______* ERROR at teardown of TestAClass.test_2three ____*
-*/async_converters.py:*: in raise_error
-    assert False, f"Took too long to complete: {fle}:{lineno}"
-E   AssertionError: Took too long to complete: */example_timeouts*/test_fails_method_fixtures.py:20
+*/plugin.py:*: in raise_error
+    assert False, f"Took too long to complete: {fle}:{lineno}*
+E   AssertionError: Took too long to complete: */example_timeouts*/test_fails_method_fixtures.py:24 (timeout=0.01)
 _______* ERROR at teardown of test_one ____*
-*/async_converters.py:*: in raise_error
-    assert False, f"Took too long to complete: {fle}:{lineno}"
-E   AssertionError: Took too long to complete: */example_timeouts*/test_surrounding_pytestmark.py:9
+*/plugin.py:*: in raise_error
+    assert False, f"Took too long to complete: {fle}:{lineno}*
+E   AssertionError: Took too long to complete: */example_timeouts*/test_surrounding_pytestmark.py:17 (timeout=0.01)
 _______* ERROR at setup of test_two ____*
-*/async_converters.py:*: in raise_error
-    assert False, f"Took too long to complete: {fle}:{lineno}"
-E   AssertionError: Took too long to complete: */example_timeouts*/test_surrounding_pytestmark.py:17
+*/plugin.py:*: in raise_error
+    assert False, f"Took too long to complete: {fle}:{lineno}*
+E   AssertionError: Took too long to complete: */example_timeouts*/test_surrounding_pytestmark.py:25 (timeout=0.01)
 _______* ERROR at setup of test_three ____*
-*/async_converters.py:*: in raise_error
-    assert False, f"Took too long to complete: {fle}:{lineno}"
-E   AssertionError: Took too long to complete: */example_timeouts*/test_surrounding_pytestmark.py:23
+*/plugin.py:*: in raise_error
+    assert False, f"Took too long to complete: {fle}:{lineno}*
+E   AssertionError: Took too long to complete: */example_timeouts*/test_surrounding_pytestmark.py:31 (timeout=0.01)
 _______* ERROR at setup of test_four ____*
-*/async_converters.py:*: in raise_error
-    assert False, f"Took too long to complete: {fle}:{lineno}"
-E   AssertionError: Took too long to complete: */example_timeouts*/test_surrounding_pytestmark.py:29
+*/plugin.py:*: in raise_error
+    assert False, f"Took too long to complete: {fle}:{lineno}*
+E   AssertionError: Took too long to complete: */example_timeouts*/test_surrounding_pytestmark.py:37 (timeout=0.02)
 _______* ERROR at setup of test_five ____*
-*/async_converters.py:*: in raise_error
-    assert False, f"Took too long to complete: {fle}:{lineno}"
-E   AssertionError: Took too long to complete: */example_timeouts*/test_surrounding_pytestmark.py:43
+*/plugin.py:*: in raise_error
+    assert False, f"Took too long to complete: {fle}:{lineno}*
+E   AssertionError: Took too long to complete: */example_timeouts*/test_surrounding_pytestmark.py:51 (timeout=0.02)
 _______* ERROR at setup of test_six ____*
-*/async_converters.py:*: in raise_error
-    assert False, f"Took too long to complete: {fle}:{lineno}"
-E   AssertionError: Took too long to complete: */example_timeouts*/conftest.py:7
+*/plugin.py:*: in raise_error
+    assert False, f"Took too long to complete: {fle}:{lineno}*
+E   AssertionError: Took too long to complete: */example_timeouts*/conftest.py:11 (timeout=0.01)
 _______* ERROR at setup of test_seven ____*
-*/async_converters.py:*: in raise_error
-    assert False, f"Took too long to complete: {fle}:{lineno}"
-E   AssertionError: Took too long to complete: */example_timeouts*/conftest.py:14
+*/plugin.py:*: in raise_error
+    assert False, f"Took too long to complete: {fle}:{lineno}*
+E   AssertionError: Took too long to complete: */example_timeouts*/conftest.py:18 (timeout=0.01)
 _______* ERROR at teardown of test_seven ____*
   + Exception Group Traceback (most recent call last):
   |*ExceptionGroup: errors during test teardown (2 sub-exceptions)
   +-+---------------- 1 ----------------
     | Traceback (most recent call last):
-    | AssertionError: Took too long to complete: */conftest.py:21
+    | AssertionError: Took too long to complete: */conftest.py:25 (timeout=0.01)
     +---------------- 2 ----------------
     | Traceback (most recent call last):
-    | AssertionError: Took too long to complete: */test_surrounding_pytestmark.py:35
+    | AssertionError: Took too long to complete: */test_surrounding_pytestmark.py:43 (timeout=0.02)
     +------------------------------------
 =======* FAILURES ====*
 _______* test_takes_closest_pytestmark ____*
-*/async_converters.py:*: in raise_error
-    assert False, f"Took too long to complete: {fle}:{lineno}"
-E   AssertionError: Took too long to complete: */example_timeouts*/test_fails_tests.py:8
+*/plugin.py:*: in raise_error
+    assert False, f"Took too long to complete: {fle}:{lineno}*
+E   AssertionError: Took too long to complete: */example_timeouts*/test_fails_tests.py:15 (timeout=0.01)
 _______* test_takes_pytestmark_on_function2 ____*
-*/async_converters.py:*: in raise_error
-    assert False, f"Took too long to complete: {fle}:{lineno}"
-E   AssertionError: Took too long to complete: */example_timeouts*/test_fails_tests.py:17
+*/plugin.py:*: in raise_error
+    assert False, f"Took too long to complete: {fle}:{lineno}*
+E   AssertionError: Took too long to complete: */example_timeouts*/test_fails_tests.py:24 (timeout=0.02)

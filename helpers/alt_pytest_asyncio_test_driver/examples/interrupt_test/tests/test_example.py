@@ -3,6 +3,10 @@ from collections.abc import AsyncGenerator
 
 import pytest
 
+import alt_pytest_asyncio
+
+AsyncTimeout = alt_pytest_asyncio.protocols.AsyncTimeout
+
 
 @pytest.fixture()
 async def thing() -> AsyncGenerator[int]:
@@ -20,8 +24,8 @@ async def test_bb_shows_failed_tests() -> None:
     assert False, "NOOOOO"
 
 
-@pytest.mark.async_timeout(1)
-async def test_cc_shows_timedout_tests() -> None:
+async def test_cc_shows_timedout_tests(async_timeout: AsyncTimeout) -> None:
+    async_timeout.set_timeout_seconds(1)
     await asyncio.sleep(3)
 
 

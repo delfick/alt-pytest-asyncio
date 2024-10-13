@@ -24,6 +24,8 @@ Changelog
 0.9.0 - TBD
     * Enabling the plugin must now be done by adding ``alt_pytest_asyncio.enable``
       to the pytest list of enabled plugins if it's not being manually enabled.
+    * Removed ``pytest.mark.async_timeout`` and replaced the functionality with
+      a fixture.
     * Changed the exported api of the plugin
 
         * ``alt_pytest_asyncio.plugin.OverrideLoop`` is now ``alt_pytest_asyncio.Loop``
@@ -153,43 +155,116 @@ tests.
 Timeouts
 --------
 
-alt_pytest_asyncio registers a ``pytest.mark.async_timeout(seconds)`` mark which
-you can use to set a timeout for your test.
+.. note:: The ``pytest.mark.async_timeout(seconds)`` that existed before
+   version 0.9.0 no longer has an effect and has been replaced with the fixtures
+   as mentioned below
+
+This plugin can configure the timeout for any async fixture or test using the
+``async_timeout`` fixture or by creating a ``default_async_timeout`` fixture.
 
 For example:
 
 .. code-block:: python
 
    import pytest
+   import alt_pytest_asyncio
 
-   @pytest.mark.async_timeout(10)
-   async def test_something():
+   AsyncTimeout = alt_pytest_asyncio.protocols.AsyncTimeout
+
+   async def test_something(async_timeout: AsyncTimeout) -> None:
+      async_timeout.set_timeout_seconds(10)
       await something_that_may_take_a_while()
 
 This test will be cancelled after 10 seconds and raise an assertion error saying
 the test took too long and the file and line number where the test is.
 
-You can also use the async_timeout mark on coroutine fixtures:
+.. note:: The async_timeout passed into a fixture or a test is a new instance
+   specific to that fixture or test. Setting it in a fixture only affects that
+   fixture and setting it in a test only affects that test.
+
+You can also set a ``default_async_timeout`` fixture to change the default:
+
+.. code-block:: python
+
+   import pytest
+   import alt_pytest_asyncio
+
+   AsyncTimeout = alt_pytest_asyncio.protocols.AsyncTimeout
+
+
+   @pytest.fixture()
+   def default_async_timeout() -> float:
+       return 0.5
+
+   @pytest.fixture
+   async def my_amazing_fixture() -> int:
+      # Will timeout because of our default 0.5
+      await asyncio.sleep(1)
+      return 1
+
+   @pytest.fixture
+   async def my_amazing_fixture(async_timeout: AsyncTimeout) -> int:
+      # Change timeout for just this fixture
+      async_timeout.set_timeout_seconds(2)
+      await asyncio.sleep(1)
+      return 1
+
+For fixtures that have a non function scope, they require a
+``{scope}_default_async_timeout`` fixture:
 
 .. code-block:: python
 
    import pytest
 
-   @pytest.fixture()
-   @pytest.mark.async_timeout(0.5)
-   async def my_amazing_fixture():
-      await asyncio.sleep(1)
-      return 1
+
+   @pytest.fixture(scope="session")
+   def session_default_async_timeout() -> float:
+       return 5
+
+   @pytest.fixture(scope="session")
+   async def some_fixture() -> None:
+       # timeout here is 5
+       pass
+
+   class TestStuff:
+       @pytest.fixture(scope="class")
+       async def some_fixture() -> None:
+           # timeout here is 5
+           pass
+
+       class TestMore:
+           @pytest.fixture(scope="class")
+           async def class_default_async_timeout() -> int:
+               return 8
+
+           @pytest.fixture(scope="class")
+           async def some_fixture() -> None:
+               # timeout here is 8
+               pass
+
+The plugin knows about the scopes ``function``, ``class``, ``module``, ``package``
+and ``session``. So say a ``scope="class"`` async fixture is executed, the closest
+``class_default_async_timeout`` fixture is used unless that doesn't exist, in which
+case ``module_default_async_timeout`` is used, otherwise ``package_default_async_timeout``,
+otherwise ``session_default_async_timeout``.
+
+There is a default ``session_default_async_timeout`` available which returns the
+value set by the ``default_async_timeout`` pytest option the plugin provides.
 
 And you can have a timeout on generator fixtures:
 
 .. code-block:: python
 
    import pytest
+   from collections.abc import Iterator
+   import alt_pytest_asyncio
+
+   AsyncTimeout = alt_pytest_asyncio.protocols.AsyncTimeout
 
    @pytest.fixture()
-   @pytest.mark.async_timeout(0.5)
-   async def my_amazing_fixture():
+   async def my_amazing_fixture(async_timeout: AsyncTimeout) -> Iterator[int]:
+      async_timeout.set_timeout_seconds(0.5)
+
       try:
          await asyncio.sleep(1)
          yield 1
@@ -209,6 +284,15 @@ option.
 Note that if the timeout fires whilst you have the debugger active then the timeout
 will not cancel the current test. This is determined by checking if ``sys.gettrace()``
 returns a non-None value.
+
+The object that is provided when the fixture/test asks for ``async_timeout`` can
+be modified by overriding the ``async_timeout`` session scope'd fixture and
+returning an object that inherits from and implements
+``alt_pytest_asyncio.base.AsyncTimeoutProvider``. This is a python "abc" class
+with a single method ``load`` which is called to return the object given to the
+fixture or test. This object must implement
+``alt_pytest_asyncio.base.AsyncTimeout``. The default implementation can be found
+at ``alt_pytest_asyncio.plugin.LoadedAsyncTimeout``.
 
 Overriding the loop
 -------------------

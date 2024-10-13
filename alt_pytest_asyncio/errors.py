@@ -4,3 +4,7 @@ class AltPytestAsyncioError(Exception):
 
 class PluginAlreadyStarted(AltPytestAsyncioError):
     pass
+
+
+class NoAsyncTimeoutInSyncFunctions(AltPytestAsyncioError):
+    pass

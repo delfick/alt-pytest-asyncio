@@ -15,6 +15,10 @@ from typing import Protocol
 import pytest
 from alt_pytest_asyncio_test_driver import available_examples
 
+import alt_pytest_asyncio
+
+AsyncTimeout = alt_pytest_asyncio.protocols.AsyncTimeout
+
 
 @contextlib.contextmanager
 def listening() -> Iterator[tuple[socket.socket, str]]:
@@ -97,9 +101,12 @@ async def test_shows_correctly_for_failing_fixtures(name: str, pytester: pytest.
     matcher.fnmatch_lines(expected.strip().split("\n"))
 
 
-@pytest.mark.async_timeout(7)
 @pytest.mark.skipif(os.name == "nt", reason="Can't use async subprocess on windows")
-async def test_cleans_up_tests_properly_on_interrupt(pytester: pytest.Pytester) -> None:
+async def test_cleans_up_tests_properly_on_interrupt(
+    async_timeout: AsyncTimeout, pytester: pytest.Pytester
+) -> None:
+    async_timeout.set_timeout_seconds(7)
+
     examples = (
         importlib.resources.files("alt_pytest_asyncio_test_driver") / "examples" / "interrupt_test"
     )

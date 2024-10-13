@@ -3,7 +3,15 @@ from collections.abc import AsyncGenerator
 
 import pytest
 
-pytestmark = pytest.mark.async_timeout(0.01)
+
+@pytest.fixture(scope="module")
+def module_default_async_timeout() -> float:
+    return 0.02
+
+
+@pytest.fixture
+def default_async_timeout() -> float:
+    return 0.01
 
 
 @pytest.fixture()
