@@ -1,10 +1,15 @@
 import asyncio
+import contextvars
 import dataclasses
+import functools
 import sys
-from collections.abc import Coroutine
-from typing import TYPE_CHECKING
+from collections.abc import Callable, Coroutine
+from typing import TYPE_CHECKING, ParamSpec, TypeVar
 
 from _pytest._code.code import ExceptionInfo
+
+P_Args = ParamSpec("P_Args")
+T_Ret = TypeVar("T_Ret")
 
 
 def cancel_all_tasks(
@@ -86,3 +91,18 @@ def run_coro_as_main(
     finally:
         cancel_all_tasks(loop, ignore_errors_from_tasks=[task])
         loop.close()
+
+
+def run_sync_with_ctx(
+    ctx: contextvars.Context, func: Callable[P_Args, T_Ret]
+) -> Callable[P_Args, T_Ret]:
+    @functools.wraps(func)
+    def run(*args: P_Args.args, **kwargs: P_Args.kwargs) -> T_Ret:
+        try:
+            ctx.run(lambda: None)
+        except RuntimeError:
+            return func(*args, **kwargs)
+        else:
+            return ctx.run(func, *args, **kwargs)
+
+    return run
