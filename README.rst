@@ -21,6 +21,20 @@ generator fixtures.
 Changelog
 ---------
 
+0.9.0 - TBD
+    * Enabling the plugin must now be done by adding ``alt_pytest_asyncio.enable``
+      to the pytest list of enabled plugins if it's not being manually enabled.
+    * Removed ``pytest.mark.async_timeout`` and replaced the functionality with
+      a fixture.
+    * Changed the exported api of the plugin
+
+        * ``alt_pytest_asyncio.plugin.OverrideLoop`` is now ``alt_pytest_asyncio.Loop``
+        * ``alt_pytest_asyncio.plugin.AltPytestAsyncioPlugin`` now takes ``managed_loop``
+          as a keyword argument instead of the first positional argument with the
+          name ``loop``.
+        * The new ``Loop`` that replaces ``OverrideLoop`` now has an attributed
+          ``controlled_loop`` instead of ``loop``.
+
 0.8.2 - 12 October 2024
     * Added type annotations
     * CI now tests against python 3.13
@@ -77,6 +91,18 @@ Changelog
       pytest.main from an existing event loop. I decided to make this it's
       own module so I can have tests for this code.
 
+Installation
+------------
+
+Most users of this plugin won't need to manually construct the plugin as that's
+only required if you're doing funky things where you want to manually call
+``pytest.main`` (see next section).
+
+For this majority case, enabling the plugin requires:
+* The plugin be installed in the python environment
+* Adding ``alt_pytest_asyncio.enable`` to the list of pytest plugins that are
+  enabled.
+
 Running from your own event loop
 --------------------------------
 
@@ -85,7 +111,7 @@ do something like:
 
 .. code-block:: python
 
-   from alt_pytest_asyncio.plugin import AltPytestAsyncioPlugin, run_coro_as_main
+   import alt_pytest_asyncio
    import nest_asyncio
    import asyncio
    import pytest
@@ -93,7 +119,13 @@ do something like:
    async def my_tests():
       await do_some_setup_before_pytest()
 
-      plugins = [AltPytestAsyncioPlugin(loop)]
+      loop: asyncio.AbstractEventLoop = ...
+
+      plugins = [
+        alt_pytest_asyncio.plugin.AltPytestAsyncioPlugin(
+            managed_loop=loop
+        ),
+      ]
 
       try:
           code = pytest.main([], plugins=plugins)
@@ -112,53 +144,127 @@ do something like:
       loop = asyncio.get_event_loop()
       nest_asyncio.apply(loop)
 
-      run_coro_as_main(loop, my_tests())
+      alt_pytest_asyncio.run_coro_as_main(loop, my_tests())
 
 Note that if you don't need to run pytest from an existing event loop, you don't
-need to do anything other than have alt_pytest_asyncio installed in your
-environment and you'll be able to just use async keywords on your fixtures and
+need to do anything other than have ``alt_pytest_asyncio`` installed in your
+environment and ``alt_pytest_asyncio.enable`` in your pytest plugins list
+and you'll be able to just use async keywords on your fixtures and
 tests.
 
 Timeouts
 --------
 
-alt_pytest_asyncio registers a ``pytest.mark.async_timeout(seconds)`` mark which
-you can use to set a timeout for your test.
+.. note:: The ``pytest.mark.async_timeout(seconds)`` that existed before
+   version 0.9.0 no longer has an effect and has been replaced with the fixtures
+   as mentioned below
+
+This plugin can configure the timeout for any async fixture or test using the
+``async_timeout`` fixture or by creating a ``default_async_timeout`` fixture.
 
 For example:
 
 .. code-block:: python
 
    import pytest
+   import alt_pytest_asyncio
 
-   @pytest.mark.async_timeout(10)
-   async def test_something():
+   AsyncTimeout = alt_pytest_asyncio.protocols.AsyncTimeout
+
+   async def test_something(async_timeout: AsyncTimeout) -> None:
+      async_timeout.set_timeout_seconds(10)
       await something_that_may_take_a_while()
 
 This test will be cancelled after 10 seconds and raise an assertion error saying
 the test took too long and the file and line number where the test is.
 
-You can also use the async_timeout mark on coroutine fixtures:
+.. note:: The async_timeout passed into a fixture or a test is a new instance
+   specific to that fixture or test. Setting it in a fixture only affects that
+   fixture and setting it in a test only affects that test.
+
+You can also set a ``default_async_timeout`` fixture to change the default:
+
+.. code-block:: python
+
+   import pytest
+   import alt_pytest_asyncio
+
+   AsyncTimeout = alt_pytest_asyncio.protocols.AsyncTimeout
+
+
+   @pytest.fixture()
+   def default_async_timeout() -> float:
+       return 0.5
+
+   @pytest.fixture
+   async def my_amazing_fixture() -> int:
+      # Will timeout because of our default 0.5
+      await asyncio.sleep(1)
+      return 1
+
+   @pytest.fixture
+   async def my_amazing_fixture(async_timeout: AsyncTimeout) -> int:
+      # Change timeout for just this fixture
+      async_timeout.set_timeout_seconds(2)
+      await asyncio.sleep(1)
+      return 1
+
+For fixtures that have a non function scope, they require a
+``{scope}_default_async_timeout`` fixture:
 
 .. code-block:: python
 
    import pytest
 
-   @pytest.fixture()
-   @pytest.mark.async_timeout(0.5)
-   async def my_amazing_fixture():
-      await asyncio.sleep(1)
-      return 1
+
+   @pytest.fixture(scope="session")
+   def session_default_async_timeout() -> float:
+       return 5
+
+   @pytest.fixture(scope="session")
+   async def some_fixture() -> None:
+       # timeout here is 5
+       pass
+
+   class TestStuff:
+       @pytest.fixture(scope="class")
+       async def some_fixture() -> None:
+           # timeout here is 5
+           pass
+
+       class TestMore:
+           @pytest.fixture(scope="class")
+           async def class_default_async_timeout() -> int:
+               return 8
+
+           @pytest.fixture(scope="class")
+           async def some_fixture() -> None:
+               # timeout here is 8
+               pass
+
+The plugin knows about the scopes ``function``, ``class``, ``module``, ``package``
+and ``session``. So say a ``scope="class"`` async fixture is executed, the closest
+``class_default_async_timeout`` fixture is used unless that doesn't exist, in which
+case ``module_default_async_timeout`` is used, otherwise ``package_default_async_timeout``,
+otherwise ``session_default_async_timeout``.
+
+There is a default ``session_default_async_timeout`` available which returns the
+value set by the ``default_async_timeout`` pytest option the plugin provides.
 
 And you can have a timeout on generator fixtures:
 
 .. code-block:: python
 
    import pytest
+   from collections.abc import Iterator
+   import alt_pytest_asyncio
+
+   AsyncTimeout = alt_pytest_asyncio.protocols.AsyncTimeout
 
    @pytest.fixture()
-   @pytest.mark.async_timeout(0.5)
-   async def my_amazing_fixture():
+   async def my_amazing_fixture(async_timeout: AsyncTimeout) -> Iterator[int]:
+      async_timeout.set_timeout_seconds(0.5)
+
       try:
          await asyncio.sleep(1)
          yield 1
@@ -179,6 +285,15 @@ Note that if the timeout fires whilst you have the debugger active then the time
 will not cancel the current test. This is determined by checking if ``sys.gettrace()``
 returns a non-None value.
 
+The object that is provided when the fixture/test asks for ``async_timeout`` can
+be modified by overriding the ``async_timeout`` session scope'd fixture and
+returning an object that inherits from and implements
+``alt_pytest_asyncio.base.AsyncTimeoutProvider``. This is a python "abc" class
+with a single method ``load`` which is called to return the object given to the
+fixture or test. This object must implement
+``alt_pytest_asyncio.base.AsyncTimeout``. The default implementation can be found
+at ``alt_pytest_asyncio.plugin.LoadedAsyncTimeout``.
+
 Overriding the loop
 -------------------
 
@@ -191,26 +306,24 @@ then restore the original loop on exit.
 
 Usage looks like::
 
-    from alt_pytest_asyncio.plugin import OverrideLoop
+    import alt_pytest_asyncio
 
     class TestThing:
         @pytest.fixture(autouse=True)
-        def custom_loop(self):
-            with OverrideLoop() as custom_loop:
+        def custom_loop(self) -> alt_pytest_asyncio.protocols.Loop:
+            with alt_pytest_asyncio.Loop() as custom_loop:
                 yield custom_loop
 
-        def test_thing(self, custom_loop):
+        def test_thing(self, custom_loop: alt_pytest_asyncio.protocols.Loop):
             custom_loop.run_until_complete(my_thing())
 
 By putting the loop into an autouse fixture, all fixtures used by the test
 will have the custom loop. If you want to include module level fixtures too
 then use the OverrideLoop in a module level fixture too.
 
-OverrideLoop takes in a ``new_loop`` boolean that will make it so no new
-loop is set and asyncio is left with no default loop.
-
-The new loop itself (or None if new_loop is False) can be found in the
-``loop`` attribute of the object yielded by the context manager.
+If the Loop is instantiated with ``new_loop=True`` then it will create and manage
+a new event loop whilst it's being used as a context manager. This new loop
+will be available on the object as ``.controlled_loop``.
 
 The ``run_until_complete`` on the ``custom_loop`` in the above example will
 do a ``run_until_complete`` on the new loop, but in a way that means you

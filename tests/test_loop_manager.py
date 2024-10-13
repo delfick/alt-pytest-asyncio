@@ -3,7 +3,7 @@ from collections.abc import AsyncGenerator, Coroutine, Iterator
 
 import pytest
 
-from alt_pytest_asyncio.plugin import OverrideLoop
+from alt_pytest_asyncio import Loop
 
 
 def get_event_loop() -> asyncio.AbstractEventLoop:
@@ -69,10 +69,10 @@ def test_will_not_let_you_do_run_until_complete_outside_the_context_manager() ->
 
     try:
         coro = info["coro"] = blah()
-        OverrideLoop().run_until_complete(coro)
+        Loop().run_until_complete(coro)
         assert False, "should have risen an error"
     except Exception as error:
-        msg = "Cannot use run_until_complete on OverrideLoop outside of using it as a context manager"
+        msg = "Cannot use run_until_complete on this alt_pytest_asyncio.Loop outside of using it as a context manager"
         assert str(error) == msg
 
     assert info["coro"] is not None
@@ -85,7 +85,7 @@ def test_can_replace_the_loop(fut: asyncio.Future[None]) -> None:
 
     info["original"] = get_event_loop()
 
-    with OverrideLoop() as custom_loop:
+    with Loop() as custom_loop:
         futs["b"] = get_event_loop().create_future()
 
         info["before_run"] = get_event_loop()
@@ -115,7 +115,7 @@ class TestNoNewLoop:
 
         original = get_event_loop()
 
-        with OverrideLoop(new_loop=False) as custom_loop:
+        with Loop(new_loop=False) as custom_loop:
             msg = "There is no current event loop in thread.*"
             try:
                 assert get_event_loop() is None
@@ -133,7 +133,7 @@ class TestNoNewLoop:
                 custom_loop.run_until_complete(coro)
                 assert False, "should have risen an error"
             except Exception as error:
-                msg = "OverrideLoop is not managing your overridden loop, use run_until_complete on that loop instead"
+                msg = "This alt_pytest_asyncio.Loop is not managing your overridden loop, use run_until_complete on that loop instead"
                 assert str(error) == msg
 
         assert get_event_loop() is original
@@ -179,13 +179,13 @@ def test_can_shutdown_async_gens() -> None:
     assert info1 == [1, 2]
 
     # The way python asyncio works
-    # Means that by defining this outside our OverrideLoop
+    # Means that by defining this outside our Loop
     # The weakref held against it in the _asyncgens set on the loop
     # Will remain so that our shutdown_asyncgens function may work
     ag = my_generator(info2)
 
-    with OverrideLoop(new_loop=True) as custom_loop:
-        assert custom_loop.loop is not None
+    with Loop(new_loop=True) as custom_loop:
+        assert custom_loop.controlled_loop is not None
 
         assert info2 == []
         assert info3 == []
@@ -201,7 +201,7 @@ def test_can_shutdown_async_gens() -> None:
             assert info3 == [1]
 
         custom_loop.run_until_complete(doit())
-        assert list(custom_loop.loop._asyncgens) == [ag]  # type: ignore[attr-defined]
+        assert list(custom_loop.controlled_loop._asyncgens) == [ag]  # type: ignore[attr-defined]
         assert info3 == [1]
         assert info2 == [1, 2]
 
@@ -224,13 +224,11 @@ def test_can_shutdown_async_gens() -> None:
 
 class TestTestingAutoUse:
     @pytest.fixture(autouse=True)
-    def custom_loop(
-        self, loop_info: dict[str, asyncio.AbstractEventLoop]
-    ) -> Iterator[OverrideLoop]:
+    def custom_loop(self, loop_info: dict[str, asyncio.AbstractEventLoop]) -> Iterator[Loop]:
         assert not loop_info
         loop_info["original"] = get_event_loop()
 
-        with OverrideLoop() as custom_loop:
+        with Loop() as custom_loop:
             assert loop_info["original"] is not get_event_loop()
             yield custom_loop
 
@@ -267,7 +265,7 @@ class TestTestingAutoUse:
     @pytest.fixture(autouse=True)
     async def fix1(
         self,
-        custom_loop: OverrideLoop,
+        custom_loop: Loop,
         loop_info: dict[str, asyncio.AbstractEventLoop],
     ) -> None:
         loop_info["fix1"] = get_event_loop()
@@ -313,7 +311,7 @@ class TestTestingAutoUse:
 
     def test_has_the_loop_on_custom_loop(
         self,
-        custom_loop: OverrideLoop,
+        custom_loop: Loop,
         fix1: None,
         fix2: None,
         fix3: None,
@@ -323,12 +321,12 @@ class TestTestingAutoUse:
     ) -> None:
         loop_info["test"] = get_event_loop()
         assert list(loop_info) == ["original", "fix1", "fix2", "fix3a", "fix4a", "fix5a", "test"]
-        assert custom_loop.loop is get_event_loop()
+        assert custom_loop.controlled_loop is get_event_loop()
         self.assertLoopInfo(loop_info, closed=False)
 
     def test_can_use_futures_from_fixtures(
         self,
-        custom_loop: OverrideLoop,
+        custom_loop: Loop,
         fix1: None,
         fix2: None,
         fix3: None,

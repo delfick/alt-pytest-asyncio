@@ -3,23 +3,29 @@ from collections.abc import AsyncGenerator
 
 import pytest
 
+import alt_pytest_asyncio
+
+AsyncTimeout = alt_pytest_asyncio.protocols.AsyncTimeout
+
 
 class TestAClass:
     @pytest.fixture()
-    @pytest.mark.async_timeout(0.01)
-    async def fixture_timeout(self) -> int:
+    async def fixture_timeout(self, async_timeout: AsyncTimeout) -> int:
+        async_timeout.set_timeout_seconds(0.01)
         await asyncio.sleep(1)
         return 1
 
     @pytest.fixture()
-    @pytest.mark.async_timeout(0.01)
-    async def fixture_timeout_in_setup(self) -> AsyncGenerator[int]:
+    async def fixture_timeout_in_setup(self, async_timeout: AsyncTimeout) -> AsyncGenerator[int]:
+        async_timeout.set_timeout_seconds(0.01)
         await asyncio.sleep(1)
         yield 1
 
     @pytest.fixture()
-    @pytest.mark.async_timeout(0.01)
-    async def fixture_timeout_in_teardown(self) -> AsyncGenerator[int]:
+    async def fixture_timeout_in_teardown(
+        self, async_timeout: AsyncTimeout
+    ) -> AsyncGenerator[int]:
+        async_timeout.set_timeout_seconds(0.01)
         try:
             yield 1
         finally:

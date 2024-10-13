@@ -15,6 +15,10 @@ from typing import Protocol
 import pytest
 from alt_pytest_asyncio_test_driver import available_examples
 
+import alt_pytest_asyncio
+
+AsyncTimeout = alt_pytest_asyncio.protocols.AsyncTimeout
+
 
 @contextlib.contextmanager
 def listening() -> Iterator[tuple[socket.socket, str]]:
@@ -77,7 +81,7 @@ async def test_shows_correctly_for_failing_fixtures(name: str, pytester: pytest.
     with importlib.resources.as_file(examples) as examples_path:
         shutil.copytree(examples_path, pytester.path / name)
 
-    result = pytester.runpytest_subprocess("--tb", "short")
+    result = pytester.runpytest_subprocess("--tb", "short", "-p", "alt_pytest_asyncio.enable")
     assert not result.errlines
 
     lines: int | list[str] = 0
@@ -97,9 +101,12 @@ async def test_shows_correctly_for_failing_fixtures(name: str, pytester: pytest.
     matcher.fnmatch_lines(expected.strip().split("\n"))
 
 
-@pytest.mark.async_timeout(7)
 @pytest.mark.skipif(os.name == "nt", reason="Can't use async subprocess on windows")
-async def test_cleans_up_tests_properly_on_interrupt(pytester: pytest.Pytester) -> None:
+async def test_cleans_up_tests_properly_on_interrupt(
+    async_timeout: AsyncTimeout, pytester: pytest.Pytester
+) -> None:
+    async_timeout.set_timeout_seconds(7)
+
     examples = (
         importlib.resources.files("alt_pytest_asyncio_test_driver") / "examples" / "interrupt_test"
     )
@@ -111,6 +118,8 @@ async def test_cleans_up_tests_properly_on_interrupt(pytester: pytest.Pytester) 
             sys.executable,
             "-m",
             "pytest",
+            "-p",
+            "alt_pytest_asyncio.enable",
             cwd=directory,
             stdout=subprocess.PIPE,
             stderr=subprocess.STDOUT,

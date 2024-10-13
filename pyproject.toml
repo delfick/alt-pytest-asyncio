@@ -21,7 +21,7 @@ dependencies = [
 ]
 
 [project.entry-points.pytest11]
-alt_pytest_asyncio = "alt_pytest_asyncio"
+alt_pytest_asyncio = "alt_pytest_asyncio.plugin"
 
 [project.urls]
 Homepage = "https://github.com/delfick/alt-pytest-asyncio"
