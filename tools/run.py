@@ -27,6 +27,44 @@ def cli() -> None:
 
 @cli.command(context_settings=dict(ignore_unknown_options=True))
 @click.argument("args", nargs=-1, type=click.UNPROCESSED)
+def docs(args: list[str]) -> None:
+    docs_path = here / ".." / "docs"
+    build_path = docs_path / "_build"
+    cmd: list[pathlib.Path | str] = ["python", "-m", "sphinx.cmd.build"]
+
+    other_args: list[str] = []
+    for arg in args:
+        if arg == "fresh":
+            if build_path.exists():
+                shutil.rmtree(build_path)
+        elif arg == "view":
+            cmd = ["python", "-m", "sphinx_autobuild", "--port", "9876"]
+        else:
+            other_args.append(arg)
+
+    os.chdir(docs_path)
+
+    (build_path / "html").mkdir(exist_ok=True, parents=True)
+    (build_path / "doctrees").mkdir(exist_ok=True, parents=True)
+
+    run(
+        "--package",
+        "tools",
+        "--extra",
+        "docs",
+        *(str(c) for c in cmd),
+        ".",
+        "_build/html",
+        "-b",
+        "html",
+        "-d",
+        "_build/doctrees",
+        *other_args,
+    )
+
+
+@cli.command(context_settings=dict(ignore_unknown_options=True))
+@click.argument("args", nargs=-1, type=click.UNPROCESSED)
 def format(args: list[str]) -> None:
     """
     Run ruff format and ruff check fixing I and UP rules
