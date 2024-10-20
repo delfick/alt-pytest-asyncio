@@ -21,7 +21,7 @@ generator fixtures.
 Changelog
 ---------
 
-0.9.0 - TBD
+0.9.0 - 20 October 2024
     * Enabling the plugin must now be done by adding ``alt_pytest_asyncio.enable``
       to the pytest list of enabled plugins if it's not being manually enabled.
     * Removed ``pytest.mark.async_timeout`` and replaced the functionality with
