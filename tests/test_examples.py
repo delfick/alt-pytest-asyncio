@@ -81,7 +81,16 @@ async def test_shows_correctly_for_failing_fixtures(name: str, pytester: pytest.
     with importlib.resources.as_file(examples) as examples_path:
         shutil.copytree(examples_path, pytester.path / name)
 
-    result = pytester.runpytest_subprocess("--tb", "short", "-p", "alt_pytest_asyncio.enable")
+    if (pytester.path / name / "pytest.ini").exists():
+        (pytester.path / name / "pytest.ini").rename(pytester.path / "pytest.ini")
+
+    timeout_args: list[str] = []
+    if name == "example_cli_timeout":
+        timeout_args.extend(["--default-async-timeout", "0.09"])
+
+    result = pytester.runpytest_subprocess(
+        "--tb", "short", "-p", "alt_pytest_asyncio.enable", *timeout_args
+    )
     assert not result.errlines
 
     lines: int | list[str] = 0

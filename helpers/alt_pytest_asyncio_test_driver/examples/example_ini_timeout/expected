@@ -1,0 +1,5 @@
+=======* FAILURES ====*
+_______* test_outside_ini_timeout ____*
+E   AssertionError: Took too long to complete: */example_ini_timeout/test_timeouts.py:12 (timeout=0.07)
+=======* short test summary info ====*
+=======* 1 failed, 1 passed in * ====*

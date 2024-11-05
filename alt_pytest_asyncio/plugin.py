@@ -22,7 +22,7 @@ def pytest_addoption(parser: pytest.Parser) -> None:
         "alt-pytest-asyncio", description="Alternative asyncio pytest plugin options"
     )
     group.addoption("--default-async-timeout", type=float, dest="default_async_timeout", help=desc)
-    parser.addini("default_async_timeout", desc, default=5)
+    parser.addini("default_async_timeout", desc)
 
 
 class _ManagedLoop(contextlib.AbstractContextManager[None]):
@@ -179,9 +179,14 @@ class AsyncTimeoutProvider(base.AsyncTimeoutProvider):
 
 @pytest.fixture(scope="session")
 def session_default_async_timeout(pytestconfig: pytest.Config) -> float:
-    timeout = pytestconfig.option.default_async_timeout
+    timeout = pytestconfig.getini("default_async_timeout")
+
+    if not timeout:
+        timeout = pytestconfig.option.default_async_timeout
+
     if timeout is None:
         timeout = 5
+
     return float(timeout)
 
 
