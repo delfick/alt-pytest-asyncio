@@ -27,7 +27,7 @@ Changelog
 
 .. _release-0.9.1:
 
-0.9.1 - TBD
+0.9.1 - 5 November 2024
     * Made the plugin take into account pytest.ini for setting the default async timeout
 
 .. _release-0.9.0:
