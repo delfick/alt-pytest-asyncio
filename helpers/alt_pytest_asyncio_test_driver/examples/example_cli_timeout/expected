@@ -1,0 +1,5 @@
+=======* FAILURES ====*
+_______* test_outside_cli_timeout ____*
+E   AssertionError: Took too long to complete: */example_cli_timeout/test_timeouts.py:13 (timeout=0.09)
+=======* short test summary info ====*
+=======* 1 failed, 1 passed in * ====*

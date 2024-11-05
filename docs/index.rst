@@ -25,6 +25,11 @@ generator fixtures.
 Changelog
 ---------
 
+.. _release-0.9.1:
+
+0.9.1 - TBD
+    * Made the plugin take into account pytest.ini for setting the default async timeout
+
 .. _release-0.9.0:
 
 0.9.0 - 20 October 2024
