@@ -21,6 +21,33 @@ class Converter:
             defaultdict(list)
         )
 
+    def _cleanup_completed_tasks(self) -> None:
+        """
+        Remove references to completed tasks to they can be garbage collected, including the
+        return (or yielded) values of the fixture functions, which would otherwise leak memory.
+        """
+        for loop, tasks in list(self._test_tasks.items()):
+            if loop.is_closed():
+                continue
+
+            remaining: list[asyncio.Task[object]] = []
+            finished: list[asyncio.Task[object]] = []
+            for t in tasks:
+                if not t.done():
+                    remaining.append(t)
+                else:
+                    t.cancel()
+                    finished.append(t)
+
+            self._test_tasks[loop] = remaining
+
+            if finished:
+                loop.run_until_complete(asyncio.tasks.gather(*finished, return_exceptions=True))
+
+    def _add_new_task(self, loop: asyncio.AbstractEventLoop, task: asyncio.Task[object]) -> None:
+        self._cleanup_completed_tasks()
+        self._test_tasks[loop].append(task)
+
     def sessionfinish(self) -> None:
         for loop, tasks in self._test_tasks.items():
             ts = []
@@ -227,7 +254,7 @@ class Converter:
             self._async_runner(async_timeout, func, args, kwargs), context=self._ctx
         )
         task.add_done_callback(silent_done_task)
-        self._test_tasks[loop].append(task)
+        self._add_new_task(loop, task)
 
         return loop.run_until_complete(task)
 
