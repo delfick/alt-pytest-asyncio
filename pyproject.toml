@@ -26,10 +26,13 @@ alt_pytest_asyncio = "alt_pytest_asyncio.plugin"
 [project.urls]
 Homepage = "https://github.com/delfick/alt-pytest-asyncio"
 
-[tool.uv]
-dev-dependencies = [
+[project.optional-dependencies]
+dev = [
     "tools",
-    "alt_pytest_asyncio_test_driver",
+    "alt_pytest_asyncio_test_driver"
+]
+tools = [
+    "tools",
 ]
 
 [tool.hatch.metadata]
