@@ -25,6 +25,11 @@ generator fixtures.
 Changelog
 ---------
 
+.. _release-0.9.2:
+
+0.9.2 - 23 February 2025
+    * Fixed a memory leak for large test suites
+
 .. _release-0.9.1:
 
 0.9.1 - 5 November 2024
