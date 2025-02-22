@@ -26,8 +26,23 @@ class Converter:
         Remove references to completed tasks to they can be garbage collected, including the
         return (or yielded) values of the fixture functions, which would otherwise leak memory.
         """
-        for loop, tasks in self._test_tasks.items():
-            self._test_tasks[loop] = [t for t in tasks if not t.done()]
+        for loop, tasks in list(self._test_tasks.items()):
+            if loop.is_closed():
+                continue
+
+            remaining: list[asyncio.Task[object]] = []
+            finished: list[asyncio.Task[object]] = []
+            for t in tasks:
+                if not t.done():
+                    remaining.append(t)
+                else:
+                    t.cancel()
+                    finished.append(t)
+
+            self._test_tasks[loop] = remaining
+
+            if finished:
+                loop.run_until_complete(asyncio.tasks.gather(*finished, return_exceptions=True))
 
     def _add_new_task(self, loop: asyncio.AbstractEventLoop, task: asyncio.Task[object]) -> None:
         self._cleanup_completed_tasks()
