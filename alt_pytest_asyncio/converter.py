@@ -171,11 +171,10 @@ class Converter:
                     __tracebackhide__ = True
 
                     async_timeout.use_default_timeout()
-                    await self._async_runner(async_timeout, gen_obj.__anext__, (), {})
-                    if async_timeout.error is not None:
-                        if isinstance(async_timeout.error, StopAsyncIteration):
-                            async_timeout.error = None
-                    else:
+                    if not isinstance(async_timeout.error, StopAsyncIteration):
+                        await self._async_runner(async_timeout, gen_obj.__anext__, (), {})
+
+                    if async_timeout.error is None:
                         async_timeout.error = ValueError(
                             "Async generator fixture should only yield once"
                         )
