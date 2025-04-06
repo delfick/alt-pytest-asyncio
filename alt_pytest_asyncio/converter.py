@@ -66,15 +66,21 @@ class Converter:
             return
 
         if hasattr(fixturedef.func, "__alt_asyncio_pytest_converted__"):
-            return
+            fixturedef.func = fixturedef.func.__alt_asyncio_pytest_original__  # type: ignore[misc,attr-defined]
+
+        original = fixturedef.func
 
         if inspect.iscoroutinefunction(fixturedef.func):
-            async_timeout = self._get_async_timeout(request.scope, request.getfixturevalue)
-            self._convert_async_coroutine_fixture(fixturedef, request, async_timeout)
+            async_timeout_maker = self._get_async_timeout_maker(
+                request.scope, request.getfixturevalue
+            )
+            self._convert_async_coroutine_fixture(fixturedef, request, async_timeout_maker)
 
         elif inspect.isasyncgenfunction(fixturedef.func):
-            async_timeout = self._get_async_timeout(request.scope, request.getfixturevalue)
-            self._convert_async_gen_fixture(fixturedef, request, async_timeout)
+            async_timeout_maker = self._get_async_timeout_maker(
+                request.scope, request.getfixturevalue
+            )
+            self._convert_async_gen_fixture(fixturedef, request, async_timeout_maker)
 
         elif inspect.isgeneratorfunction(fixturedef.func):
             self._convert_sync_gen_fixture(fixturedef)
@@ -83,18 +89,20 @@ class Converter:
             self._convert_sync_fixture(fixturedef)
 
         fixturedef.func.__alt_asyncio_pytest_converted__ = True  # type: ignore[attr-defined]
+        fixturedef.func.__alt_asyncio_pytest_original__ = original  # type: ignore[attr-defined]
 
     def convert_pyfunc(self, pyfuncitem: pytest.Function) -> None:
         if inspect.iscoroutinefunction(pyfuncitem.obj):
             _obj: Any = pyfuncitem.obj
             func: Callable[..., Awaitable[object]] = _obj
 
-            async_timeout = self._get_async_timeout(
+            async_timeout_maker = self._get_async_timeout_maker(
                 "function", pyfuncitem._request.getfixturevalue
             )
 
             @wraps(func)
             def run_test(*args: object, **kwargs: object) -> object:
+                async_timeout = async_timeout_maker()
                 res = self._run(async_timeout, func, args, kwargs)
                 async_timeout.raise_maybe(func)
                 return res
@@ -108,7 +116,7 @@ class Converter:
         self,
         fixturedef: pytest.FixtureDef[object],
         request: pytest.FixtureRequest,
-        async_timeout: base.AsyncTimeout,
+        async_timeout_maker: base.AsyncTimeoutMaker,
     ) -> None:
         """
         Run our async fixture in our event loop and capture the error from
@@ -121,6 +129,7 @@ class Converter:
         def run_fixture(*args: object, **kwargs: object) -> object:
             __tracebackhide__ = True
 
+            async_timeout = async_timeout_maker()
             res = self._run(async_timeout, func, args, kwargs)
             async_timeout.raise_maybe(func)
             return res
@@ -131,7 +140,7 @@ class Converter:
         self,
         fixturedef: pytest.FixtureDef[object],
         request: pytest.FixtureRequest,
-        async_timeout: base.AsyncTimeout,
+        async_timeout_maker: base.AsyncTimeoutMaker,
     ) -> None:
         """
         Return the yield'd value from the generator and ensure the generator is
@@ -143,6 +152,8 @@ class Converter:
         @wraps(generator)
         def run_fixture(*args: object, **kwargs: object) -> object:
             __tracebackhide__ = True
+
+            async_timeout = async_timeout_maker()
 
             if "async_timeout" in kwargs:
                 kwargs["async_timeout"] = async_timeout
@@ -160,11 +171,10 @@ class Converter:
                     __tracebackhide__ = True
 
                     async_timeout.use_default_timeout()
-                    await self._async_runner(async_timeout, gen_obj.__anext__, (), {})
-                    if async_timeout.error is not None:
-                        if isinstance(async_timeout.error, StopAsyncIteration):
-                            async_timeout.error = None
-                    else:
+                    if not isinstance(async_timeout.error, StopAsyncIteration):
+                        await self._async_runner(async_timeout, gen_obj.__anext__, (), {})
+
+                    if async_timeout.error is None:
                         async_timeout.error = ValueError(
                             "Async generator fixture should only yield once"
                         )
@@ -258,9 +268,9 @@ class Converter:
 
         return loop.run_until_complete(task)
 
-    def _get_async_timeout(
+    def _get_async_timeout_maker(
         self, scope: str, getfixturevalue: Callable[[str], object]
-    ) -> base.AsyncTimeout:
+    ) -> base.AsyncTimeoutMaker:
         assert scope in _PytestScopes
 
         default_timeout: float = 5
@@ -281,4 +291,4 @@ class Converter:
         async_timeout_provider = getfixturevalue("async_timeout")
         assert isinstance(async_timeout_provider, base.AsyncTimeoutProvider)
 
-        return async_timeout_provider.load(default_timeout=default_timeout)
+        return lambda: async_timeout_provider.load(default_timeout=default_timeout)

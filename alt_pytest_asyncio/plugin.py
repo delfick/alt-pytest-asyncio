@@ -158,7 +158,7 @@ class LoadedAsyncTimeout(base.AsyncTimeout):
             if self.error:
                 raise self.error
 
-        if self.error:
+        if self.error and not isinstance(self.error, StopAsyncIteration):
             # Use a separate function so when --tb=short is not set we don't get
             # this entire function in the output
             raise_error()

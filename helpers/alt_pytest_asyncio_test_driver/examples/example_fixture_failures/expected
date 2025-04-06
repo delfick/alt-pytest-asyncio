@@ -1,5 +1,5 @@
 =======* ERRORS =====*
-_______* ERROR at setup of test_fails_on_fixture_returns _____*
+_* ERROR at setup of test_fails_on_fixture_returns _*
 *test_fails.py:17: in fixture_returns
     await one*()
 *test_fails.py:8: in one
@@ -7,7 +7,7 @@ _______* ERROR at setup of test_fails_on_fixture_returns _____*
 *test_fails.py:12: in two
     raise ValueError*("WAT")
 E   ValueError: WAT
-_______* ERROR at setup of test_fails_on_fixture_yields _____*
+_* ERROR at setup of test_fails_on_fixture_yields _*
 *test_fails.py:22: in fixture_yields
     yield await one*()
 *test_fails.py:8: in one
@@ -15,7 +15,7 @@ _______* ERROR at setup of test_fails_on_fixture_yields _____*
 *test_fails.py:12: in two
     raise ValueError*("WAT")
 E   ValueError: WAT
-_______* ERROR at teardown of test_fails_on_fixture_fails_in_finally _____*
+_* ERROR at teardown of test_fails_on_fixture_fails_in_finally _*
 *test_fails.py:30: in fixture_fails_in_finally
     await one*()
 *test_fails.py:8: in one
@@ -23,4 +23,28 @@ _______* ERROR at teardown of test_fails_on_fixture_fails_in_finally _____*
 *test_fails.py:12: in two
     raise ValueError*("WAT")
 E   ValueError: WAT
-=======* 1 passed, 3 error* in * ===*
+_* ERROR at setup of test_fails_fixture_failure_does_not_linger_first_iterator _*
+example_fixture_failures/test_fails.py:45: in fixture_fails_once_iterator
+    yield await one()
+example_fixture_failures/test_fails.py:8: in one
+    await two()
+example_fixture_failures/test_fails.py:12: in two
+    raise ValueError*("WAT")
+E   ValueError: WAT
+_* ERROR at setup of test_fails_fixture_failure_does_not_linger_first_result _*
+example_fixture_failures/test_fails.py:55: in fixture_fails_once_result
+    await one()
+example_fixture_failures/test_fails.py:8: in one
+    await two()
+example_fixture_failures/test_fails.py:12: in two
+    raise ValueError*("WAT")
+E   ValueError: WAT
+_* ERROR at teardown of test_fails_fixture_failure_does_not_linger_first_finally _*
+example_fixture_failures/test_fails.py:68: in fixture_fails_once_finally
+    await one()
+example_fixture_failures/test_fails.py:8: in one
+    await two()
+example_fixture_failures/test_fails.py:12: in two
+    raise ValueError*("WAT")
+E   ValueError: WAT
+=======* 5 passed, 6 error* in * ===*

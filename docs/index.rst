@@ -25,6 +25,12 @@ generator fixtures.
 Changelog
 ---------
 
+.. _release-0.9.3:
+
+0.9.3 - TBD
+    * Fixed a bug where fixture errors would persist across multiple tests
+      https://github.com/delfick/alt-pytest-asyncio/issues/26
+
 .. _release-0.9.2:
 
 0.9.2 - 23 February 2025
