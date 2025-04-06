@@ -66,7 +66,9 @@ class Converter:
             return
 
         if hasattr(fixturedef.func, "__alt_asyncio_pytest_converted__"):
-            return
+            fixturedef.func = fixturedef.func.__alt_asyncio_pytest_original__  # type: ignore[misc,attr-defined]
+
+        original = fixturedef.func
 
         if inspect.iscoroutinefunction(fixturedef.func):
             async_timeout_maker = self._get_async_timeout_maker(
@@ -87,6 +89,7 @@ class Converter:
             self._convert_sync_fixture(fixturedef)
 
         fixturedef.func.__alt_asyncio_pytest_converted__ = True  # type: ignore[attr-defined]
+        fixturedef.func.__alt_asyncio_pytest_original__ = original  # type: ignore[attr-defined]
 
     def convert_pyfunc(self, pyfuncitem: pytest.Function) -> None:
         if inspect.iscoroutinefunction(pyfuncitem.obj):
