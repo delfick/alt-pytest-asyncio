@@ -1,6 +1,6 @@
 import abc
 from collections.abc import Callable
-from typing import NoReturn
+from typing import NoReturn, Protocol
 
 
 class AsyncTimeout(abc.ABC):
@@ -15,6 +15,10 @@ class AsyncTimeout(abc.ABC):
 
     @abc.abstractmethod
     def raise_maybe(self, func: Callable[..., object]) -> None: ...
+
+
+class AsyncTimeoutMaker(Protocol):
+    def __call__(self) -> AsyncTimeout: ...
 
 
 class AsyncTimeoutProvider(abc.ABC):
