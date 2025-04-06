@@ -50,7 +50,7 @@ fi
 PROJECT_ROOT=$(pwd)
 export PROJECT_ROOT
 
-if ! ./tools/uv sync --locked -q; then
+if ! ./tools/uv sync --extra dev --locked -q; then
     if [ "$sourced" = "1" ]; then
         return 1
     else
@@ -73,5 +73,5 @@ if [ "$sourced" = "1" ]; then
     source .venv/bin/activate
     cd "$DIRECTORY_BEFORE" || return 1
 else
-    exec uv run ./tools/run.py "$@"
+    exec ./tools/uv run --extra dev ./tools/run.py "$@"
 fi
