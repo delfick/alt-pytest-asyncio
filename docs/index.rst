@@ -27,7 +27,7 @@ Changelog
 
 .. _release-0.9.3:
 
-0.9.3 - TBD
+0.9.3 - 14 April 2025
     * Fixed a bug where fixture errors would persist across multiple tests
       https://github.com/delfick/alt-pytest-asyncio/issues/26
 
