@@ -117,6 +117,15 @@ class LoadedAsyncTimeout(base.AsyncTimeout):
     def use_default_timeout(self) -> None:
         self.set_timeout_seconds(self.timeout)
 
+    def debugger_enabled(self) -> bool:
+        if sys.version_info >= (3, 12):
+            return sys.monitoring.get_tool(sys.monitoring.DEBUGGER_ID) is not None
+        else:
+            # sys.gettrace is not a language feature and not guaranteed to be available
+            # on all python implementations, so we see if it exists
+            gettrace = getattr(sys, "gettrace", None)
+            return gettrace is not None and gettrace() is not None
+
     def set_timeout_seconds(self, timeout: float) -> None:
         if self._timeout:
             self._timeout.cancel()
@@ -130,10 +139,7 @@ class LoadedAsyncTimeout(base.AsyncTimeout):
 
             if task and not task.done():
                 # If the debugger is active then don't cancel, so that debugging may continue
-                # sys.gettrace is not a language feature and not guaranteed to be available
-                # on all python implementations, so we see if it exists
-                gettrace = getattr(sys, "gettrace", None)
-                if gettrace is None or gettrace() is None:
+                if not self.debugger_enabled():
                     self.cancelled = True
                     task.cancel()
 
