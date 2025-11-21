@@ -25,6 +25,11 @@ generator fixtures.
 Changelog
 ---------
 
+.. _release-0.9.4:
+
+0.9.4 - TBD
+    * Make the plugin aware of PEP 669 (`#33 <https://github.com/delfick/alt-pytest-asyncio/pull/33>`_)
+
 .. _release-0.9.3:
 
 0.9.3 - 14 April 2025
