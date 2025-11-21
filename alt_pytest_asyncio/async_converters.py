@@ -231,13 +231,19 @@ async def async_runner(func, timeout, info, args, kwargs):
     else:
         current_task = asyncio.Task.current_task()
 
+    def debugger_enabled():
+        if sys.version_info >= (3, 12):
+            return sys.monitoring.get_tool(sys.monitoring.DEBUGGER_ID) is not None
+        else:
+            # sys.gettrace is not a language feature and not guaranteed to be available
+            # on all python implementations, so we see if it exists
+            gettrace = getattr(sys, "gettrace", None)
+            return gettrace is not None and gettrace() is not None
+
     def timeout_task(task):
         if not task.done():
             # If the debugger is active then don't cancel, so that debugging may continue
-            # sys.gettrace is not a language feature and notguaranteed to be available
-            # on all python implementations, so we see if it exists
-            gettrace = getattr(sys, "gettrace", None)
-            if gettrace is None or gettrace() is None:
+            if not debugger_enabled():
                 info["cancelled"] = True
                 task.cancel()
 

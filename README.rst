@@ -21,6 +21,9 @@ generator fixtures.
 Changelog
 ---------
 
+0.7.3 - TBD
+    * Make the plugin aware of PEP669
+
 0.7.2 - 1 October 2023
     * Timeouts don't take affect if the debugger is active
 
