@@ -25,6 +25,11 @@ generator fixtures.
 Changelog
 ---------
 
+.. _release-0.9.5:
+
+0.9.5 - TBD
+    * Ensure the Loop class can get current loop without failing when there is no current loop
+
 .. _release-0.9.4:
 
 0.9.4 - 27 January 2026
