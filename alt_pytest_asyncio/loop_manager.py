@@ -1,6 +1,7 @@
 import asyncio
 import contextlib
 import sys
+import warnings
 from collections.abc import Coroutine
 from types import TracebackType
 from typing import Self
@@ -43,14 +44,16 @@ class Loop(contextlib.AbstractContextManager["Loop"]):
     """
 
     controlled_loop: asyncio.AbstractEventLoop | None
-    _original_loop: asyncio.AbstractEventLoop
+    _original_loop: asyncio.AbstractEventLoop | None
 
     def __init__(self, new_loop: bool = True) -> None:
         self._tasks: list[asyncio.Task[object]] = []
         self._new_loop = new_loop
 
     def __enter__(self) -> Self:
-        self._original_loop = asyncio.get_event_loop_policy().get_event_loop()
+        with warnings.catch_warnings():
+            warnings.simplefilter("ignore", DeprecationWarning)
+            self._original_loop = asyncio.get_event_loop_policy().get_event_loop()
 
         if self._new_loop:
             self.controlled_loop = asyncio.new_event_loop()
