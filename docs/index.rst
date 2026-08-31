@@ -25,6 +25,11 @@ generator fixtures.
 Changelog
 ---------
 
+.. _release-0.9.6:
+
+0.9.6 - TBD
+    * Remove use of deprecated asyncio functionality that breaks the plugin under Python3.14
+
 .. _release-0.9.5:
 
 0.9.5 - 19 February 2026

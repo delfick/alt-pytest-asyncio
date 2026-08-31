@@ -1,7 +1,6 @@
 import asyncio
 import contextlib
 import sys
-import warnings
 from collections.abc import Coroutine
 from types import TracebackType
 from typing import Self
@@ -51,9 +50,11 @@ class Loop(contextlib.AbstractContextManager["Loop"]):
         self._new_loop = new_loop
 
     def __enter__(self) -> Self:
-        with warnings.catch_warnings():
-            warnings.simplefilter("ignore", DeprecationWarning)
-            self._original_loop = asyncio.get_event_loop_policy().get_event_loop()
+        try:
+            self._original_loop = asyncio.get_event_loop()
+        except RuntimeError:
+            # Seems there's no other way to know if there is a current loop....
+            pass
 
         if self._new_loop:
             self.controlled_loop = asyncio.new_event_loop()

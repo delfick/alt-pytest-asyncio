@@ -40,7 +40,7 @@ example_fixture_failures/test_fails.py:12: in two
     raise ValueError*("WAT")
 E   ValueError: WAT
 _* ERROR at teardown of test_fails_fixture_failure_does_not_linger_first_finally _*
-example_fixture_failures/test_fails.py:68: in fixture_fails_once_finally
+example_fixture_failures/test_fails.py:66: in fixture_fails_once_finally
     await one()
 example_fixture_failures/test_fails.py:8: in one
     await two()
