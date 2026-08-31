@@ -27,7 +27,7 @@ Changelog
 
 .. _release-0.9.6:
 
-0.9.6 - TBD
+0.9.6 - 31 August 2026
     * Remove use of deprecated asyncio functionality that breaks the plugin under Python3.14
 
 .. _release-0.9.5:
