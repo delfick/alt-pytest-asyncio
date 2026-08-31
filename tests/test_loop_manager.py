@@ -7,7 +7,10 @@ from alt_pytest_asyncio import Loop
 
 
 def get_event_loop() -> asyncio.AbstractEventLoop:
-    return asyncio.get_event_loop_policy().get_event_loop()
+    try:
+        return asyncio.get_event_loop()
+    except RuntimeError:
+        return asyncio.new_event_loop()
 
 
 @pytest.fixture()
@@ -118,7 +121,7 @@ class TestNoNewLoop:
         with Loop(new_loop=False) as custom_loop:
             msg = "There is no current event loop in thread.*"
             try:
-                assert get_event_loop() is None
+                assert asyncio.get_event_loop() is None
                 assert False, "should have risen an error"
             except Exception as error:
                 assert str(error).startswith("There is no current event loop in thread")

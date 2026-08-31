@@ -61,11 +61,9 @@ async def fixture_fails_once_finally() -> AsyncGenerator[None]:
         yield
     finally:
         global _done_finally
-        if _done_finally:
-            return
-
-        _done_finally = True
-        await one()
+        if not _done_finally:
+            _done_finally = True
+            await one()
 
 
 def test_fails_on_fixture_returns(fixture_returns: int) -> None:

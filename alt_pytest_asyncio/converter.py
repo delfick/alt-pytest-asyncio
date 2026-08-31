@@ -259,7 +259,11 @@ class Converter:
             res.exception()
             return
 
-        loop = asyncio.get_event_loop_policy().get_event_loop()
+        try:
+            loop = asyncio.get_event_loop()
+        except RuntimeError:
+            loop = asyncio.new_event_loop()
+
         task = loop.create_task(
             self._async_runner(async_timeout, func, args, kwargs), context=self._ctx
         )
